@@ -2,6 +2,8 @@
 
 Receipts for your Rails application that works with any payment provider.
 
+Check out an [example PDF receipt](https://github.com/excid3/receipts/blob/master/examples/receipt.pdf?raw=true)
+
 ## Installation
 
 Add this line to your application's Gemfile:
