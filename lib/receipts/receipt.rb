@@ -1,3 +1,6 @@
+require 'prawn'
+require 'prawn-table'
+
 module Receipts
   class Receipt < Prawn::Document
     attr_reader :attributes, :id, :company, :custom_font, :line_items, :logo, :message, :product
