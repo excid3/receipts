@@ -1,5 +1,5 @@
 require 'prawn'
-require 'prawn-table'
+require 'prawn/table'
 
 module Receipts
   class Receipt < Prawn::Document
@@ -42,7 +42,12 @@ module Receipts
 
       def header
         move_down 60
-        image company.fetch(:logo), height: 32
+
+        if company.has_key? :logo
+          image company.fetch(:logo), height: 32
+        else
+          move_down 32
+        end
 
         move_down 8
         text "<color rgb='a6a6a6'>RECEIPT FOR CHARGE ##{id}</color>", inline_format: true
