@@ -1,3 +1,5 @@
+![travisci](https://api.travis-ci.org/excid3/receipts.svg)
+
 # Receipts
 
 Receipts for your Rails application that works with any payment provider.
