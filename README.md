@@ -32,7 +32,7 @@ We're going to add a method called `receipt` on our model called `Charge`
 that will create a new receipt for the charge using attributes from the
 model.
 
-Usage in Rails:
+Video Tutorial:
 [GoRails Episode #51](https://gorails.com/episodes/pdf-receipts)
 
 ```ruby
