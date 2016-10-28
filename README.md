@@ -104,7 +104,7 @@ Company consists of several required nested attributes.
   * `name` - **Required**
   * `address` - **Required**
   * `email` - **Required**
-  * `logo` - **Required**
+  * `logo` - *Optional*
 
 * `line_items` - **Required**
 
