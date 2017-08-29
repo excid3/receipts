@@ -22,7 +22,7 @@ module Receipts
     private
 
       def default_message
-        "We've received your payment for #{attributes.fetch(:product)}. You can keep this receipt for your records. For questions, contact us anytime at <color rgb='326d92'><link href='mailto:#{company.fetch(:email)}.com?subject=\"Charge ##{id}\"'><b>#{company.fetch(:email)}</b></link></color>."
+        "We've received your payment for #{attributes.fetch(:product)}. You can keep this receipt for your records. For questions, contact us anytime at <color rgb='326d92'><link href='mailto:#{company.fetch(:email)}?subject=Charge ##{id}'><b>#{company.fetch(:email)}</b></link></color>."
       end
 
       def setup_fonts
