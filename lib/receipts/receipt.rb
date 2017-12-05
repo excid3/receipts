@@ -49,7 +49,7 @@ module Receipts
         move_down 60
 
         if company.has_key? :logo
-          image open(company.fetch(:logo)), height: 96
+          image open(company.fetch(:logo)), height: 96, :position => :center
         else
           move_down 32
         end
