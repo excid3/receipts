@@ -46,7 +46,7 @@ module Receipts
       end
 
       def header
-        move_down 60
+        move_down 30
 
         if company.has_key? :logo
           image open(company.fetch(:logo)), height: 96, :position => :center
@@ -56,9 +56,10 @@ module Receipts
 
         move_down 8
         text "<color rgb='a6a6a6'>#{title}</color>", inline_format: true, size: 24, :align => :center
-
-        move_down 30
-        text message, inline_format: true, size: 12.5, leading: 4
+        unless message.blank?
+          move_down 30
+          text message, inline_format: true, size: 12.5, leading: 4
+        end
       end
 
       def charge_details
@@ -74,7 +75,7 @@ module Receipts
       end
 
       def footer
-        move_down 45
+        move_down 30
         text company.fetch(:name), inline_format: true
         text "<color rgb='888888'>#{company.fetch(:address)}</color>", inline_format: true
       end
