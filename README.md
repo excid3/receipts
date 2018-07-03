@@ -60,6 +60,7 @@ class Charge < ActiveRecord::Base
   def receipt
     Receipts::Receipt.new(
       id: id,
+      subheading: "RECEIPT FOR CHARGE #%{id}",
       product: "GoRails",
       company: {
         name: "One Month, Inc.",
