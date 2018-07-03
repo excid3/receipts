@@ -3,7 +3,7 @@ require 'prawn/table'
 
 module Receipts
   class Receipt < Prawn::Document
-    attr_reader :attributes, :id, :company, :custom_font, :line_items, :logo, :message, :product
+    attr_reader :attributes, :id, :company, :custom_font, :line_items, :logo, :message, :product, :subheading
 
     def initialize(attributes)
       @attributes  = attributes
@@ -12,6 +12,7 @@ module Receipts
       @line_items  = attributes.fetch(:line_items)
       @custom_font = attributes.fetch(:font, {})
       @message     = attributes.fetch(:message) { default_message }
+      @subheading  = attributes.fetch(:subheading) { default_subheading }
 
       super(margin: 0)
 
@@ -23,6 +24,10 @@ module Receipts
 
       def default_message
         "We've received your payment for #{attributes.fetch(:product)}. You can keep this receipt for your records. For questions, contact us anytime at <color rgb='326d92'><link href='mailto:#{company.fetch(:email)}?subject=Charge ##{id}'><b>#{company.fetch(:email)}</b></link></color>."
+      end
+
+      def default_subheading
+        "RECEIPT FOR CHARGE #%{id}"
       end
 
       def setup_fonts
@@ -50,7 +55,7 @@ module Receipts
         end
 
         move_down 8
-        text "<color rgb='a6a6a6'>RECEIPT FOR CHARGE ##{id}</color>", inline_format: true
+        text "<color rgb='a6a6a6'>#{subheading % { id: id }}</color>", inline_format: true
 
         move_down 30
         text message, inline_format: true, size: 12.5, leading: 4
