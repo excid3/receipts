@@ -48,10 +48,12 @@ module Receipts
       def header
         move_down 60
 
-        if company.has_key? :logo
-          image open(company.fetch(:logo)), height: 32
-        else
+        logo_path = company.fetch(:logo, '')
+
+        if logo_path.empty?
           move_down 32
+        else
+          image open(logo_path), height: 32
         end
 
         move_down 8
