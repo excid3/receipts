@@ -2,8 +2,8 @@ require 'prawn'
 require 'prawn/table'
 
 module Receipts
-  class Receipt < Prawn::Document
-    attr_reader :attributes, :id, :company, :custom_font, :line_items, :logo, :message, :product, :subheading
+  class Invoice < Prawn::Document
+    attr_reader :attributes, :id, :company, :custom_font, :line_items, :logo, :message, :product, :subheading, :bill_to, :issue_date, :due_date, :status
 
     def initialize(attributes)
       @attributes  = attributes
@@ -13,6 +13,10 @@ module Receipts
       @custom_font = attributes.fetch(:font, {})
       @message     = attributes.fetch(:message) { default_message }
       @subheading  = attributes.fetch(:subheading) { default_subheading }
+      @bill_to     = Array(attributes.fetch(:bill_to)).join("\n")
+      @issue_date  = attributes.fetch(:issue_date)
+      @due_date    = attributes.fetch(:due_date)
+      @status      = attributes.fetch(:status)
 
       super(margin: 0)
 
@@ -23,11 +27,11 @@ module Receipts
     private
 
       def default_message
-        "We've received your payment for #{attributes.fetch(:product)}. You can keep this receipt for your records. For questions, contact us anytime at <color rgb='326d92'><link href='mailto:#{company.fetch(:email)}?subject=Charge ##{id}'><b>#{company.fetch(:email)}</b></link></color>."
+        "For questions, contact us anytime at <color rgb='326d92'><link href='mailto:#{company.fetch(:email)}?subject=Charge ##{id}'><b>#{company.fetch(:email)}</b></link></color>."
       end
 
       def default_subheading
-        "RECEIPT FOR CHARGE #%{id}"
+        "INVOICE #%{id}"
       end
 
       def setup_fonts
@@ -57,10 +61,38 @@ module Receipts
         end
 
         move_down 8
-        text "<color rgb='a6a6a6'>#{subheading % { id: id }}</color>", inline_format: true
+        label (subheading % {id: id})
 
-        move_down 30
-        text message, inline_format: true, size: 12.5, leading: 4
+        move_down 10
+
+        # Cache the Y value so we can have both boxes at the same height
+        top = y
+        bounding_box([0, y], width: 200) do
+          label "BILL TO"
+
+          move_down 5
+          text_box bill_to, at: [0, cursor], width: 200, height: 75, inline_format: true, size: 10, leading: 4, overflow: :shrink_to_fit
+
+        end
+
+        bounding_box([250, top], width: 200) do
+          label "INVOICE DATE"
+
+          move_down 5
+          text issue_date.to_s, inline_format: true, size: 12, leading: 4
+
+          move_down 10
+          label "DUE DATE"
+
+          move_down 5
+          text due_date.to_s, inline_format: true, size: 12, leading: 4
+
+          move_down 10
+          label "STATUS"
+
+          move_down 5
+          text status, inline_format: true, size: 12, leading: 4
+        end
       end
 
       def charge_details
@@ -76,9 +108,16 @@ module Receipts
       end
 
       def footer
-        move_down 45
+        move_down 30
+        text message, inline_format: true, size: 12, leading: 4
+
+        move_down 30
         text company.fetch(:name), inline_format: true
         text "<color rgb='888888'>#{company.fetch(:address)}</color>", inline_format: true
+      end
+
+      def label(text)
+        text "<color rgb='a6a6a6'>#{text}</color>", inline_format: true, size: 8
       end
   end
 end

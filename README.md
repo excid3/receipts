@@ -4,7 +4,7 @@
 
 Receipts for your Rails application that works with any payment provider.
 
-Check out an [example PDF receipt](https://github.com/excid3/receipts/blob/master/examples/receipt.pdf?raw=true)
+Check out the [example receipt](https://github.com/excid3/receipts/blob/master/examples/receipt.pdf?raw=true) and [example invoice](https://github.com/excid3/receipts/blob/master/examples/invoice.pdf?raw=true) PDFs.
 
 ## Installation
 
@@ -168,6 +168,49 @@ resources :charges
 
 ```erb
 <%= link_to "Download Receipt", charge_path(@charge, format: :pdf) %>
+```
+
+## Invoices
+
+Invoices follow the exact same set of steps as above, with a few minor changes and have a few extra arguments you can use:
+
+* `issue_date` - Date the invoice was issued
+
+* `due_date` - Date the invoice payment is due
+
+* `status` - A status for the invoice (Pending, Paid, etc)
+
+* `bill_to` - A string or Array of lines with billing details
+
+You can also use line_items to flexibly generate and display the table with items in it, including subtotal, taxes, and total amount. 
+
+```ruby
+  Receipts::Invoice.new(
+    id: "123",
+    issue_date: Date.today,
+    due_date: Date.today + 30,
+    status: "<b><color rgb='#5eba7d'>PAID</color></b>",
+    bill_to: [
+      "GoRails, LLC",
+      "Address",
+      "City, State Zipcode",
+      nil,
+      "mail@example.com",
+    ],
+    company: {
+      name: "GoRails, LLC",
+      address: "123 Fake Street\nNew York City, NY 10012",
+      email: "support@example.com",
+      logo: File.expand_path("./examples/gorails.png")
+    },
+    line_items: [
+      ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],
+      ["GoRails Subscription", "$19.00", "1", "$19.00"],
+      [nil, nil, "Subtotal", "$19.00"],
+      [nil, nil, "Tax Rate", "0%"],
+      [nil, nil, "Total", "$19.00"],
+    ],
+  )
 ```
 
 ## Contributing
