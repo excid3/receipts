@@ -182,7 +182,7 @@ Invoices follow the exact same set of steps as above, with a few minor changes a
 
 * `bill_to` - A string or Array of lines with billing details
 
-You can also use line_items to flexibly generate and display the table with items in it, including subtotal, taxes, and total amount. 
+You can also use line_items to flexibly generate and display the table with items in it, including subtotal, taxes, and total amount.
 
 ```ruby
   Receipts::Invoice.new(
@@ -215,7 +215,7 @@ You can also use line_items to flexibly generate and display the table with item
 
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/receipts/fork )
+1. Fork it ( https://github.com/excid3/receipts/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
