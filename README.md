@@ -63,9 +63,9 @@ class Charge < ActiveRecord::Base
       subheading: "RECEIPT FOR CHARGE #%{id}",
       product: "GoRails",
       company: {
-        name: "One Month, Inc.",
-        address: "37 Great Jones\nFloor 2\nNew York City, NY 10012",
-        email: "teachers@onemonth.com",
+        name: "GoRails, LLC.",
+        address: "123 Fake Street\nNew York City, NY 10012",
+        email: "support@example.com",
         logo: Rails.root.join("app/assets/images/one-month-dark.png")
       },
       line_items: [
@@ -192,8 +192,8 @@ You can also use line_items to flexibly generate and display the table with item
     status: "<b><color rgb='#5eba7d'>PAID</color></b>",
     bill_to: [
       "GoRails, LLC",
-      "Address",
-      "City, State Zipcode",
+      "123 Fake Street",
+      "New York City, NY 10012",
       nil,
       "mail@example.com",
     ],
