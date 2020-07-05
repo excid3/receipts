@@ -1,5 +1,6 @@
 require "bundler/gem_tasks"
-require 'rspec/core/rake_task'
+require "rspec/core/rake_task"
+require "open-uri"
 
 RSpec::Core::RakeTask.new('spec')
 
@@ -22,7 +23,7 @@ task :receipt do
       name: "GoRails, LLC",
       address: "123 Fake Street\nNew York City, NY 10012",
       email: "support@example.com",
-      logo: File.expand_path("./examples/gorails.png")
+      logo: URI.open("https://www.ruby-lang.org/images/header-ruby-logo@2x.png")
     },
     line_items: [
       ["Date",           Time.now.to_s],
@@ -54,7 +55,9 @@ task :invoice do
       name: "GoRails, LLC",
       address: "123 Fake Street\nNew York City, NY 10012",
       email: "support@example.com",
-      logo: File.expand_path("./examples/gorails.png")
+      #logo: Rails.root.join("app/assets/images/gorails.png")
+      #logo: File.expand_path("./examples/gorails.png")
+      logo: File.open("./examples/gorails.png")
     },
     line_items: [
       ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],

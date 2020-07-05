@@ -66,7 +66,7 @@ class Charge < ActiveRecord::Base
         name: "GoRails, LLC.",
         address: "123 Fake Street\nNew York City, NY 10012",
         email: "support@example.com",
-        logo: Rails.root.join("app/assets/images/one-month-dark.png")
+        logo: Rails.root.join("app/assets/images/logo.png")
       },
       line_items: [
         ["Date",           created_at.to_s],
@@ -105,11 +105,25 @@ Company consists of several required nested attributes.
   * `name` - **Required**
   * `address` - **Required**
   * `email` - **Required**
-  * `logo` - *Optional*
-
-* `line_items` - **Required**
+  * `line_items` - **Required**
 
 You can set as many line items on the receipts as you want. Just pass in an array with each item containing a name and a value to display on the receipt.
+
+  * `logo` - *Optional*
+
+The logo must be either a string path to a file or a file-like object.
+
+```ruby
+logo: Rails.root.join("app/assets/images/logo.png")
+# or
+logo: File.open("app/assets/images/logo.png", "rb")
+```
+
+To use an image from a URL, we recommend using `open-uri` to open the remote file as a StringIO object.
+
+`require 'open-uri'`
+
+`logo: URI.open("https://www.ruby-lang.org/images/header-ruby-logo@2x.png")`
 
 * `font` - *Optional*
 
