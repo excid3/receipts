@@ -1,3 +1,7 @@
+### 1.0.3
+
+* [FIX] Fixes typo introduced in 1.0.2
+
 ### 1.0.2
 
 * [NEW] Add ability to specify file-like objects for logo
