@@ -227,6 +227,50 @@ You can also use line_items to flexibly generate and display the table with item
   )
 ```
 
+## Statements
+
+Statements follow the exact same set of steps as receipts, with a few minor changes and have a few extra arguments you can use:
+
+* `issue_date` - Date the invoice was issued
+
+* `start_date` - The start date of the statement period
+
+* `start_date` - The end date of the statement period
+
+* `bill_to` - A string or Array of lines with account details
+
+You can also use line_items to flexibly generate and display the table with items in it, including subtotal, taxes, and total amount.
+
+```ruby
+  Receipts::Statement.new(
+    id: "123",
+    issue_date: Date.today,
+    start_date: Date.today - 30,
+    end_date: Date.today,
+    status: "<b><color rgb='#5eba7d'>PAID</color></b>",
+    bill_to: [
+      "GoRails, LLC",
+      "123 Fake Street",
+      "New York City, NY 10012",
+      nil,
+      "mail@example.com",
+    ],
+    company: {
+      name: "GoRails, LLC",
+      address: "123 Fake Street\nNew York City, NY 10012",
+      email: "support@example.com",
+      logo: File.expand_path("./examples/gorails.png")
+    },
+    line_items: [
+      ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],
+      ["GoRails Subscription", "$19.00", "1", "$19.00"],
+      [nil, nil, "Subtotal", "$19.00"],
+      [nil, nil, "Tax Rate", "0%"],
+      [nil, nil, "Total", "$19.00"],
+    ],
+  )
+```
+
 ## Contributing
 
 1. Fork it ( https://github.com/excid3/receipts/fork )
