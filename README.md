@@ -247,7 +247,6 @@ You can also use line_items to flexibly generate and display the table with item
     issue_date: Date.today,
     start_date: Date.today - 30,
     end_date: Date.today,
-    status: "<b><color rgb='#5eba7d'>PAID</color></b>",
     bill_to: [
       "GoRails, LLC",
       "123 Fake Street",
