@@ -1,3 +1,7 @@
+### 1.1.0
+
+* [NEW] Add Statements - @anquinn
+
 ### 1.0.3
 
 * [FIX] Fixes typo introduced in 1.0.2
