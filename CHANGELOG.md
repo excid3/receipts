@@ -1,5 +1,9 @@
 ### Unreleased
 
+### 1.1.2
+
+* [NEW] Text Translation Input added - @reckerswartz
+
 ### 1.1.0
 
 * [NEW] Add Statements - @anquinn
