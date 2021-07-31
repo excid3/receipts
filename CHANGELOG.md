@@ -1,5 +1,12 @@
 ### Unreleased
 
+### 1.1.1
+
+* [FIX] Use `URI.parse().open` instead - @excid3 @reckerswartz
+* Add I18n notes to the readme - @excid3 @reckerswartz
+* Add standardrb formatting - @excid3
+* Add GitHub Actions for standardrb and tests - @excid3
+
 ### 1.1.0
 
 * [NEW] Add Statements - @anquinn
