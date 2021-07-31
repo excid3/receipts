@@ -129,6 +129,17 @@ To use an image from a URL, we recommend using `open-uri` to open the remote fil
 
 If you'd like to use your own custom font, you can pass in the file paths to the `normal` and `bold` variations of your font. The bold font variation is required because it is used in the default message. If you wish to override that, you can pass in your own custom message instead.
 
+#### Internationalization (I18n)
+
+You can use `I18n.t` when rendering your receipts to internationalize them.
+
+```ruby
+line_items: [
+  [I18n.t("receipts.date"),           created_at.to_s],
+  [I18n.t("receipts.product"), "GoRails"],
+  [I18n.t("receipts.transaction"), uuid]
+]
+```
 
 ## Rendering the Receipt PDF in your Controller
 
