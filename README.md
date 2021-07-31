@@ -269,7 +269,23 @@ You can also use line_items to flexibly generate and display the table with item
     ],
   )
 ```
+## Internationalization (I18n)
+ You can also use subheading, bill_to_text, issue_date_text, due_date_text, message to modify default text to your need.
+```ruby
 
+Receipts::Invoice.new(
+      id: id,
+      subheading: "#{I18n.t('invoice_id')} ##{invoice_number}",
+      bill_to_text: I18n.t('bill_to').upcase,
+      issue_date_text: I18n.t('issue_date').upcase,
+      due_date_text: I18n.t('renewal').upcase,
+      status_text: I18n.t('state').upcase,
+      message: I18n.t('invoice_pdf_message', id: id, email: 'support@mail.com').capitalize,
+      issue_date: active_from.strftime('%F'),
+      due_date: active_till.strftime('%F'),
+      status: "<b><color rgb='##{badgeColor}'>#{badgeLabel}</color></b>",
+    )
+```
 ## Contributing
 
 1. Fork it ( https://github.com/excid3/receipts/fork )

@@ -6,7 +6,7 @@ require 'prawn/table'
 module Receipts
   class Invoice < Prawn::Document
     attr_reader :attributes, :id, :company, :custom_font, :line_items, :logo, :message, :product, :subheading,
-                :bill_to, :issue_date, :due_date, :status, :bill_to_text, :invoice_date_text, :due_date_text,
+                :bill_to, :issue_date, :due_date, :status, :bill_to_text, :issue_date_text, :due_date_text,
                 :status_text
 
     def initialize(attributes)
@@ -22,7 +22,7 @@ module Receipts
       @due_date           = attributes.fetch(:due_date)
       @status             = attributes.fetch(:status)
       @bill_to_text       = attributes.fetch(:bill_to_text) { default_bill_to_text }
-      @invoice_date_text  = attributes.fetch(:invoice_date_text) { default_invoice_date_text }
+      @issue_date_text    = attributes.fetch(:issue_date_text) { default_issue_date_text }
       @due_date_text      = attributes.fetch(:due_date_text) { default_due_date_text }
       @status_text        = attributes.fetch(:status_text) { default_status_text }
 
@@ -46,7 +46,7 @@ module Receipts
       'BILL TO'
     end
 
-    def default_invoice_date_text
+    def default_issue_date_text
       'INVOICE DATE'
     end
 
@@ -102,7 +102,7 @@ module Receipts
       end
 
       bounding_box([250, top], width: 200) do
-        label invoice_date_text
+        label issue_date_text
 
         move_down 5
         text issue_date.to_s, inline_format: true, size: 12, leading: 4
