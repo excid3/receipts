@@ -1,9 +1,9 @@
 begin
-  require 'pry'
+  require "pry"
 rescue LoadError
 end
 
-require 'receipts'
+require "receipts"
 
 RSpec.configure do |config|
 end

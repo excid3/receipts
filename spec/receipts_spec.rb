@@ -1,4 +1,4 @@
-require 'spec_helper'
+require "spec_helper"
 
 describe Receipts do
   it "lets you create a new receipt" do
@@ -11,8 +11,8 @@ describe Receipts do
         email: "teachers@onemonth.com"
       },
       line_items: [
-        ["Product",        "GoRails"],
-      ],
+        ["Product", "GoRails"]
+      ]
     ).class.name).to eq("Receipts::Receipt")
   end
 end

@@ -1,4 +1,8 @@
+require "open-uri"
 require "receipts/version"
-require "receipts/receipt"
-require "receipts/invoice"
-require "receipts/statement"
+
+module Receipts
+  autoload :Invoice, "receipts/invoice"
+  autoload :Receipt, "receipts/receipt"
+  autoload :Statement, "receipts/statement"
+end
