@@ -1,8 +1,5 @@
-require "prawn"
-require "prawn/table"
-
 module Receipts
-  class Receipt < Prawn::Document
+  class Receipt < Base
     attr_reader :attributes, :id, :company, :custom_font, :line_items, :logo, :message, :product, :subheading
 
     def initialize(attributes)
@@ -14,7 +11,7 @@ module Receipts
       @message = attributes.fetch(:message) { default_message }
       @subheading = attributes.fetch(:subheading) { default_subheading }
 
-      super(margin: 0)
+      super(page_size: "LETTER")
 
       setup_fonts if custom_font.any?
       generate
@@ -30,48 +27,35 @@ module Receipts
       "RECEIPT FOR CHARGE #%{id}"
     end
 
-    def setup_fonts
-      font_families.update "Primary" => custom_font
-      font "Primary"
-    end
-
     def generate
-      bounding_box [0, 792], width: 612, height: 792 do
-        bounding_box [85, 792], width: 442, height: 792 do
-          header
-          charge_details
-          footer
-        end
-      end
+      header
+      description
+      charge_details
+      footer
     end
 
-    def header
-      move_down 60
-
+    def header(height: 24)
       logo = company[:logo]
+      return if logo.nil?
+      image load_image(logo), height: height
+    end
 
-      if logo.nil?
-        move_down 32
-      elsif logo.is_a?(String)
-        image URI.parse(logo).open, height: 32
-      else
-        image logo, height: 32
-      end
-
+    def description
       move_down 8
       text "<color rgb='a6a6a6'>#{subheading % {id: id}}</color>", inline_format: true
 
       move_down 30
-      text message, inline_format: true, size: 12.5, leading: 4
+      text message, inline_format: true, leading: 4
     end
 
     def charge_details
       move_down 30
+      font_size 9
 
       borders = line_items.length - 2
 
       table(line_items, width: bounds.width, cell_style: {border_color: "cccccc", inline_format: true}) do
-        cells.padding = 12
+        cells.padding = 10
         cells.borders = []
         row(0..borders).borders = [:bottom]
       end

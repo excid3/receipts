@@ -1,5 +1,9 @@
 ### Unreleased
 
+### 1.2.0
+
+* Update design to give more room for longer product names, addresses, etc - @excid3
+
 ### 1.1.1
 
 * [FIX] Use `URI.parse().open` instead - @excid3 @reckerswartz

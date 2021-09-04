@@ -12,6 +12,12 @@ task :console do
   exec "irb -r receipts -I ./lib"
 end
 
+task :examples do
+  [:receipt, :invoice, :statement].each { |t| Rake::Task[t].invoke }
+
+  puts "Use `open examples` to view example PDFs."
+end
+
 task :receipt do
   require "./lib/receipts"
 
@@ -23,7 +29,7 @@ task :receipt do
       name: "GoRails, LLC",
       address: "123 Fake Street\nNew York City, NY 10012",
       email: "support@example.com",
-      logo: URI.open("https://www.ruby-lang.org/images/header-ruby-logo@2x.png")
+      logo: "https://www.ruby-lang.org/images/header-ruby-logo@2x.png"
     },
     line_items: [
       ["Date", Time.now.to_s],
