@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ruby: ['2.7', '3.0']
+        ruby: ['2.7', '3.0', '3.1']
     env:
       BUNDLE_PATH_RELATIVE_TO_CWD: true
 
@@ -23,7 +23,6 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-          bundler: default
           bundler-cache: true
 
       - name: StandardRb check
@@ -33,4 +32,4 @@ jobs:
         env:
           RAILS_ENV: test
         run: |
-          bundle exec rspec
+          bundle exec rake test

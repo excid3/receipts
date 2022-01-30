@@ -1,10 +1,10 @@
 ![travisci](https://api.travis-ci.org/excid3/receipts.svg)
 
-# Receipts
+# Receipts Gem
 
-Receipts for your Rails application that works with any payment provider.
+Receipts, Invoices, and Statements for your Rails application that works with any payment provider. Receipts uses Prawn to generate the PDFs.
 
-Check out the [example receipt](https://github.com/excid3/receipts/blob/master/examples/receipt.pdf?raw=true) and [example invoice](https://github.com/excid3/receipts/blob/master/examples/invoice.pdf?raw=true) PDFs.
+Check out the [example PDFs](https://github.com/excid3/receipts/blob/master/examples/).
 
 ## Installation
 
@@ -24,112 +24,99 @@ Or install it yourself as:
 
 ## Usage
 
-Adding receipts to your application is pretty simple. All you need is a
-model that stores your transaction details. In this example our
-application has a model named `Charge` that we will use.
-
-We're going to add a method called `receipt` on our model called `Charge`
-that will create a new receipt for the charge using attributes from the
-model.
-
-Video Tutorial:
-[GoRails Episode #51](https://gorails.com/episodes/pdf-receipts)
+To generate a Receipt, Invoice, or Statement, create an instance and provide content to render:
 
 ```ruby
-# == Schema Information
-#
-# Table name: charges
-#
-#  id             :integer          not null, primary key
-#  user_id        :integer
-#  stripe_id      :string(255)
-#  amount         :integer
-#  card_last4     :string(255)
-#  card_type      :string(255)
-#  card_exp_month :integer
-#  card_exp_year  :integer
-#  uuid           :string
-#  created_at     :datetime
-#  updated_at     :datetime
-#
+r = Receipts::Receipt.new(
+  details: [
+    ["Receipt Number", "123"],
+    ["Date paid", Date.today],
+    ["Payment method", "ACH super long super long super long super long super long"]
+  ],
+  company: {
+    name: "Example, LLC",
+    address: "123 Fake Street\nNew York City, NY 10012",
+    email: "support@example.com",
+    logo: File.expand_path("./examples/images/logo.png")
+  },
+  recipient: [
+    "Customer",
+    "Their Address",
+    "City, State Zipcode",
+    nil,
+    "customer@example.org"
+  ],
+  line_items: [
+    ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],
+    ["Subscription", "$19.00", "1", "$19.00"],
+    [nil, nil, "Subtotal", "$19.00"],
+    [nil, nil, "Tax", "$1.12"],
+    [nil, nil, "Total", "$20.12"],
+    [nil, nil, "<b>Amount paid</b>", "$20.12"],
+    [nil, nil, "Refunded on #{Date.today}", "$5.00"]
+  ],
+  footer: "Thanks for your business. Please contact us if you have any questions."
+)
 
-class Charge < ActiveRecord::Base
-  belongs_to :user
-  validates :stripe_id, uniqueness: true
+# Returns a string of the raw PDF
+r.render 
 
-  def receipt
-    Receipts::Receipt.new(
-      id: id,
-      subheading: "RECEIPT FOR CHARGE #%{id}",
-      product: "GoRails",
-      company: {
-        name: "GoRails, LLC.",
-        address: "123 Fake Street\nNew York City, NY 10012",
-        email: "support@example.com",
-        logo: Rails.root.join("app/assets/images/logo.png")
-      },
-      line_items: [
-        ["Date",           created_at.to_s],
-        ["Account Billed", "#{user.name} (#{user.email})"],
-        ["Product",        "GoRails"],
-        ["Amount",         "$#{amount / 100}.00"],
-        ["Charged to",     "#{card_type} (**** **** **** #{card_last4})"],
-        ["Transaction ID", uuid]
-      ],
-      font: {
-        bold: Rails.root.join('app/assets/fonts/tradegothic/TradeGothic-Bold.ttf'),
-        normal: Rails.root.join('app/assets/fonts/tradegothic/TradeGothic.ttf'),
-      }
-    )
-  end
-end
+# Writes the PDF to disk
+r.render_file "examples/receipt.pdf"
 ```
 
-Update the options for the receipt according to the data you want to
-display.
+### Options
 
-## Customizing Your Receipts
+You can pass the following options to generate a PDF:
 
-* `id` - **Required**
+* `recipient` - Array of customer details to include. Typically, this is name, address, email, VAT ID, etc.
 
-This sets the ID of the charge on the receipt
+* `company` - Hash of your company details
 
-* `product` or `message` - **Required**
+  * `name` - Company name
 
-You can set either the product or message options. If you set product, it will use the default message. If you want a custom message, you can set the message option to populate it with custom text.
+  * `address` - Company address
 
-* `company` - **Required**
+  * `email` - Company support email address
 
-Company consists of several required nested attributes.
+  * `phone` - Company phone number - _Optional_
 
-  * `name` - **Required**
-  * `address` - **Required**
-  * `email` - **Required**
-  * `line_items` - **Required**
+  * `logo` - Logo to be displayed on the receipt - _Optional_
+    This can be either a Path, File, StringIO, or URL. Here are a few examples:
 
-You can set as many line items on the receipts as you want. Just pass in an array with each item containing a name and a value to display on the receipt.
+    ```ruby
+    logo: Rails.root.join("app/assets/images/logo.png")
+    logo: File.expand_path("./logo.png")
+    logo: File.open("app/assets/images/logo.png", "rb")
+    logo: "https://www.ruby-lang.org/images/header-ruby-logo@2x.png" # Downloaded with OpenURI
+    ```
 
-  * `logo` - *Optional*
+* `details` - Array of details about the Receipt, Invoice, Statement. Typically, this is receipt numbers, issue date, due date, status, etc.
 
-The logo must be either a string path to a file or a file-like object.
+* `line_items` - Array of line items to be displayed in table format.
 
-```ruby
-logo: Rails.root.join("app/assets/images/logo.png")
-# or
-logo: File.open("app/assets/images/logo.png", "rb")
-```
+* `footer` - String for a message at the bottom of the PDF.
 
-To use an image from a URL, we recommend using `open-uri` to open the remote file as a StringIO object.
+* `font` - Hash of paths to font files - _Optional_
 
-`require 'open-uri'`
+  ```ruby
+  font: {
+    bold: Rails.root.join('app/assets/fonts/tradegothic/TradeGothic-Bold.ttf'),
+    normal: Rails.root.join('app/assets/fonts/tradegothic/TradeGothic.ttf'),
+  }
+  ```
 
-`logo: URI.open("https://www.ruby-lang.org/images/header-ruby-logo@2x.png")`
+Here's an example of where each option is displayed.
 
-* `font` - *Optional*
+![options](examples/images/options.jpg)
 
-If you'd like to use your own custom font, you can pass in the file paths to the `normal` and `bold` variations of your font. The bold font variation is required because it is used in the default message. If you wish to override that, you can pass in your own custom message instead.
+### Formatting
 
-#### Internationalization (I18n)
+`details` and `line_items` allow inline formatting with Prawn. This allows you to use HTML tags to format text: `<b>` `<i>` `<u>` `<strikethrough>` `<sub>` `<sup>` `<font>` `<color>` `<link>` 
+
+See [the Prawn docs](https://prawnpdf.org/api-docs/2.3.0/Prawn/Text.html#text-instance_method) for more information.
+
+### Internationalization (I18n)
 
 You can use `I18n.t` when rendering your receipts to internationalize them.
 
@@ -141,21 +128,53 @@ line_items: [
 ]
 ```
 
-## Rendering the Receipt PDF in your Controller
+### Custom PDF Content
 
-Here we have a charges controller that responds to the show action. When
-you visit it with the PDF format, it calls the `receipt` method that we
-just created on the `Charge` model.
+You can change the entire PDF content by instantiating an Receipts object without any options.
 
-We set the filename to be the date plus the product name. You can
-customize the filename to your liking.
+```ruby
+receipt = Receipts::Receipt.new # creates an empty PDF
+```
 
-Next we set the response type which will be `application/pdf`
+Each Receipts object inherits from Prawn::Document. This allows you to choose what is rendered and include any custom Prawn content you like.
 
-Optionally we can set the `disposition` to `:inline` which allows us to
-render the PDF in the browser without forcing the download. If you
-delete this option or change it to `:attachment` then the receipt will
-be downloaded instead.
+```ruby
+receipt.text("hello world")
+```
+
+You can also use the Receipts helpers in your custom PDFs at the current cursor position.
+
+```ruby
+receipt.text("Custom header")
+receipt.render_line_items([
+  ["my line items"]
+])
+receipt.render_footer("This is a custom footer using the Receipts helper")
+```
+
+### Rendering PDFs
+
+To render a PDF in memory, use `render`. This is recommended for serving PDFs in your Rails controllers.
+
+```ruby
+receipt.render
+```
+
+To render a PDF to disk, use `render_file`:
+
+```ruby
+receipt.render_file "receipt.pdf"
+```
+
+## Rendering PDFs in Rails controller actions
+
+Here's an example Rails controller action you can use for serving PDFs. We'll first look up the database record for the `Charge` we want to render a receipt for.
+
+The `Charge` model has a `receipt` method that returns a `Receipts::Receipt` instance with all the receipt data filled out.
+
+Then we can `render` to generate the PDF in memory. This produces a String with the raw PDF data in it.
+
+Using `send_data` from Rails, we can send the PDF contents and provide the browser with a recommended filename, content type and disposition.
 
 ```ruby
 class ChargesController < ApplicationController
@@ -164,12 +183,7 @@ class ChargesController < ApplicationController
 
   def show
     respond_to do |format|
-      format.pdf {
-        send_data @charge.receipt.render,
-          filename: "#{@charge.created_at.strftime("%Y-%m-%d")}-gorails-receipt.pdf",
-          type: "application/pdf",
-          disposition: :inline
-      }
+      format.pdf { send_pdf }
     end
   end
 
@@ -178,13 +192,18 @@ class ChargesController < ApplicationController
     def set_charge
       @charge = current_user.charges.find(params[:id])
     end
+  
+  	def send_pdf
+      # Render the PDF in memory and send as the response
+      send_data @charge.receipt.render,
+          filename: "#{@charge.created_at.strftime("%Y-%m-%d")}-gorails-receipt.pdf",
+          type: "application/pdf",
+          disposition: :inline # or :attachment to download
+    end
 end
 ```
 
-And that's it! Just create a `link_to` to your charge with the format of
-`pdf` and you're good to go.
-
-For example:
+Then, just `link_to` to your charge with the format of `pdf`. For example:
 
 ```ruby
 # config/routes.rb
@@ -192,93 +211,78 @@ resources :charges
 ```
 
 ```erb
-<%= link_to "Download Receipt", charge_path(@charge, format: :pdf) %>
+<%= link_to "View Receipt", charge_path(@charge, format: :pdf) %>
 ```
 
 ## Invoices
 
-Invoices follow the exact same set of steps as above, with a few minor changes and have a few extra arguments you can use:
-
-* `issue_date` - Date the invoice was issued
-
-* `due_date` - Date the invoice payment is due
-
-* `status` - A status for the invoice (Pending, Paid, etc)
-
-* `bill_to` - A string or Array of lines with billing details
-
-You can also use line_items to flexibly generate and display the table with items in it, including subtotal, taxes, and total amount.
+Invoices follow the exact same set of steps as above. You'll simply want to modify the `details` to include other information for the Invoice such as the Issue Date, Due Date, etc.
 
 ```ruby
-  Receipts::Invoice.new(
-    id: "123",
-    issue_date: Date.today,
-    due_date: Date.today + 30,
-    status: "<b><color rgb='#5eba7d'>PAID</color></b>",
-    bill_to: [
-      "GoRails, LLC",
-      "123 Fake Street",
-      "New York City, NY 10012",
-      nil,
-      "mail@example.com",
-    ],
-    company: {
-      name: "GoRails, LLC",
-      address: "123 Fake Street\nNew York City, NY 10012",
-      email: "support@example.com",
-      logo: File.expand_path("./examples/gorails.png")
-    },
-    line_items: [
-      ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],
-      ["GoRails Subscription", "$19.00", "1", "$19.00"],
-      [nil, nil, "Subtotal", "$19.00"],
-      [nil, nil, "Tax Rate", "0%"],
-      [nil, nil, "Total", "$19.00"],
-    ],
-  )
+Receipts::Invoice.new(
+  details: [
+    ["Invoice Number", "123"],
+    ["Issue Date", Date.today.strftime("%B %d, %Y")],
+    ["Due Date", Date.today.strftime("%B %d, %Y")],
+    ["Status", "<b><color rgb='#5eba7d'>PAID</color></b>"]
+  ],
+  recipient: [
+    "<b>Bill To</b>",
+    "Customer",
+    "Address",
+    "City, State Zipcode",
+    "customer@example.org"
+  ],
+  company: {
+    name: "Example, LLC",
+    address: "123 Fake Street\nNew York City, NY 10012",
+    phone: "(555) 867-5309",
+    email: "support@example.com",
+    logo: File.expand_path("./examples/images/logo.png")
+  },
+  line_items: [
+    ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],
+    ["Subscription", "$19.00", "1", "$19.00"],
+    [nil, nil, "Subtotal", "$19.00"],
+    [nil, nil, "Tax Rate", "0%"],
+    [nil, nil, "Amount Due", "$19.00"]
+  ]
+)
 ```
 
 ## Statements
 
-Statements follow the exact same set of steps as receipts, with a few minor changes and have a few extra arguments you can use:
-
-* `issue_date` - Date the invoice was issued
-
-* `start_date` - The start date of the statement period
-
-* `start_date` - The end date of the statement period
-
-* `bill_to` - A string or Array of lines with account details
-
-You can also use line_items to flexibly generate and display the table with items in it, including subtotal, taxes, and total amount.
+Statements follow the exact same set of steps as above. You'll simply want to modify the `details` to include other information for the Invoice such as the Issue Date, Start and End Dates, etc.
 
 ```ruby
-  Receipts::Statement.new(
-    id: "123",
-    issue_date: Date.today,
-    start_date: Date.today - 30,
-    end_date: Date.today,
-    bill_to: [
-      "GoRails, LLC",
-      "123 Fake Street",
-      "New York City, NY 10012",
-      nil,
-      "mail@example.com",
-    ],
-    company: {
-      name: "GoRails, LLC",
-      address: "123 Fake Street\nNew York City, NY 10012",
-      email: "support@example.com",
-      logo: File.expand_path("./examples/gorails.png")
-    },
-    line_items: [
-      ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],
-      ["GoRails Subscription", "$19.00", "1", "$19.00"],
-      [nil, nil, "Subtotal", "$19.00"],
-      [nil, nil, "Tax Rate", "0%"],
-      [nil, nil, "Total", "$19.00"],
-    ],
-  )
+Receipts::Statement.new(
+  details: [
+    ["Statement Number", "123"],
+    ["Issue Date", Date.today.strftime("%B %d, %Y")],
+    ["Period", "#{(Date.today - 30).strftime("%B %d, %Y")} - #{Date.today.strftime("%B %d, %Y")}"]
+  ],
+  recipient: [
+    "<b>Bill To</b>",
+    "Customer",
+    "Address",
+    "City, State Zipcode",
+    "customer@example.org"
+  ],
+  company: {
+    name: "Example, LLC",
+    address: "123 Fake Street\nNew York City, NY 10012",
+    email: "support@example.com",
+    phone: "(555) 867-5309",
+    logo: File.expand_path("./examples/images/logo.png")
+  },
+  line_items: [
+    ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],
+    ["Subscription", "$19.00", "1", "$19.00"],
+    [nil, nil, "Subtotal", "$19.00"],
+    [nil, nil, "Tax Rate", "0%"],
+    [nil, nil, "Total", "$19.00"]
+  ]
+)
 ```
 
 ## Contributing

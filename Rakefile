@@ -1,12 +1,15 @@
+# frozen_string_literal: true
+
 require "bundler/gem_tasks"
-require "rspec/core/rake_task"
-require "open-uri"
+require "rake/testtask"
 
-RSpec::Core::RakeTask.new("spec")
+Rake::TestTask.new(:test) do |t|
+  t.libs << "test"
+  t.libs << "lib"
+  t.test_files = FileList["test/**/test_*.rb"]
+end
 
-# If you want to make this the default task
-task default: :spec
-task test: :spec
+task default: :test
 
 task :console do
   exec "irb -r receipts -I ./lib"
@@ -14,60 +17,74 @@ end
 
 task :examples do
   [:receipt, :invoice, :statement].each { |t| Rake::Task[t].invoke }
-
   puts "Use `open examples` to view example PDFs."
 end
 
 task :receipt do
   require "./lib/receipts"
 
-  Receipts::Receipt.new(
-    id: "123",
-    subheading: "RECEIPT FOR CHARGE #1",
-    product: "GoRails",
+  r = Receipts::Receipt.new(
+    recipient: [
+      "<b>Bill To</b>",
+      "Customer",
+      "Address",
+      "City, State Zipcode",
+      "customer@example.org"
+    ],
     company: {
-      name: "GoRails, LLC",
+      name: "Example, LLC",
       address: "123 Fake Street\nNew York City, NY 10012",
+      phone: "(555) 867-5309",
       email: "support@example.com",
-      logo: "https://www.ruby-lang.org/images/header-ruby-logo@2x.png"
+      logo: File.expand_path("./examples/images/logo.png")
     },
+    details: [
+      ["Receipt Number", "123"],
+      ["Date paid", Date.today.strftime("%B %d, %Y")],
+      ["Payment method", "ACH super long super long super long super long super long"]
+    ],
     line_items: [
-      ["Date", Time.now.to_s],
-      ["Account Billed", "Example User (user@example.com)"],
-      ["Product", "GoRails"],
-      ["Amount", "$19.00"],
-      ["Charged to", "Visa (**** **** **** 1234)"],
-      ["Transaction ID", "123456"]
+      ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],
+      ["Subscription", "$19.00", "1", "$19.00"],
+      [nil, nil, "Subtotal", "$19.00"],
+      [nil, nil, "Tax", "$1.12"],
+      [nil, nil, "Total", "$20.12"],
+      [nil, nil, "<b>Amount paid</b>", "$20.12"],
+      [nil, nil, "Refunded on #{Date.today.strftime("%B %d, %Y")}", "$5.00"]
     ]
-  ).render_file "examples/receipt.pdf"
+  )
+  r.render_file "examples/receipt.pdf"
 end
 
 task :invoice do
   require "./lib/receipts"
 
   Receipts::Invoice.new(
-    id: "123",
-    issue_date: Date.today,
-    due_date: Date.today + 30,
-    status: "<b><color rgb='#5eba7d'>PAID</color></b>",
-    bill_to: [
-      "GoRails, LLC",
+    details: [
+      ["Invoice Number", "123"],
+      ["Issue Date", Date.today.strftime("%B %d, %Y")],
+      ["Due Date", Date.today.strftime("%B %d, %Y")],
+      ["Status", "<b><color rgb='#5eba7d'>PAID</color></b>"]
+    ],
+    recipient: [
+      "<b>Bill To</b>",
+      "Customer",
       "Address",
       "City, State Zipcode",
-      nil,
-      "mail@example.com"
+      "customer@example.org"
     ],
     company: {
-      name: "GoRails, LLC",
+      name: "Example, LLC",
       address: "123 Fake Street\nNew York City, NY 10012",
+      phone: "(555) 867-5309",
       email: "support@example.com",
-      # logo: Rails.root.join("app/assets/images/gorails.png")
-      # logo: File.expand_path("./examples/gorails.png")
-      logo: File.open("./examples/gorails.png")
+      # logo: Rails.root.join("app/assets/images/logo.png")
+      # logo: File.open("./examples/images/logo.png")
+      logo: File.expand_path("./examples/images/logo.png")
     },
     line_items: [
       ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],
-      ["GoRails Subscription", "$19.00", "1", "$19.00"],
+      ["Subscription", "$19.00", "1", "$19.00"],
       [nil, nil, "Subtotal", "$19.00"],
       [nil, nil, "Tax Rate", "0%"],
       [nil, nil, "Amount Due", "$19.00"]
@@ -79,26 +96,28 @@ task :statement do
   require "./lib/receipts"
 
   Receipts::Statement.new(
-    id: "123",
-    issue_date: Date.today,
-    start_date: Date.today - 30,
-    end_date: Date.today,
-    bill_to: [
-      "GoRails, LLC",
-      "123 Fake Street",
-      "New York City, NY 10012",
-      nil,
-      "mail@example.com"
+    details: [
+      ["Statement Number", "123"],
+      ["Issue Date", Date.today.strftime("%B %d, %Y")],
+      ["Period", "#{(Date.today - 30).strftime("%B %d, %Y")} - #{Date.today.strftime("%B %d, %Y")}"]
+    ],
+    recipient: [
+      "<b>Bill To</b>",
+      "Customer",
+      "Address",
+      "City, State Zipcode",
+      "customer@example.org"
     ],
     company: {
-      name: "GoRails, LLC",
+      name: "Example, LLC",
       address: "123 Fake Street\nNew York City, NY 10012",
       email: "support@example.com",
-      logo: File.expand_path("./examples/gorails.png")
+      phone: "(555) 867-5309",
+      logo: File.expand_path("./examples/images/logo.png")
     },
     line_items: [
       ["<b>Item</b>", "<b>Unit Cost</b>", "<b>Quantity</b>", "<b>Amount</b>"],
-      ["GoRails Subscription", "$19.00", "1", "$19.00"],
+      ["Subscription", "$19.00", "1", "$19.00"],
       [nil, nil, "Subtotal", "$19.00"],
       [nil, nil, "Tax Rate", "0%"],
       [nil, nil, "Total", "$19.00"]
