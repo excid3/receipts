@@ -1,5 +1,11 @@
 ### Unreleased
 
+### 2.0.0
+
+* New, consistent layouts between Receipts, Invoices, and Statements - @excid3
+* PDFs can now be completely customized - @excid3
+* Add line_items to Receipts - @excid3
+
 ### 1.2.0
 
 * Update design to give more room for longer product names, addresses, etc - @excid3
