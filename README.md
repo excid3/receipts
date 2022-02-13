@@ -59,7 +59,7 @@ r = Receipts::Receipt.new(
 )
 
 # Returns a string of the raw PDF
-r.render 
+r.render
 
 # Writes the PDF to disk
 r.render_file "examples/receipt.pdf"
@@ -105,6 +105,7 @@ You can pass the following options to generate a PDF:
     normal: Rails.root.join('app/assets/fonts/tradegothic/TradeGothic.ttf'),
   }
   ```
+* `skip_generate` - Boolean indicating if generation should be skipped during initialization. Useful if you need to manipulate the Prawn object directly before generating the document. Don't forget to run `#generate` manually - _Optional, defaults to `false`_
 
 Here's an example of where each option is displayed.
 
@@ -112,7 +113,7 @@ Here's an example of where each option is displayed.
 
 ### Formatting
 
-`details` and `line_items` allow inline formatting with Prawn. This allows you to use HTML tags to format text: `<b>` `<i>` `<u>` `<strikethrough>` `<sub>` `<sup>` `<font>` `<color>` `<link>` 
+`details` and `line_items` allow inline formatting with Prawn. This allows you to use HTML tags to format text: `<b>` `<i>` `<u>` `<strikethrough>` `<sub>` `<sup>` `<font>` `<color>` `<link>`
 
 See [the Prawn docs](https://prawnpdf.org/api-docs/2.3.0/Prawn/Text.html#text-instance_method) for more information.
 
@@ -192,7 +193,7 @@ class ChargesController < ApplicationController
     def set_charge
       @charge = current_user.charges.find(params[:id])
     end
-        
+
     def send_pdf
       # Render the PDF in memory and send as the response
       send_data @charge.receipt.render,

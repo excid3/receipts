@@ -11,12 +11,14 @@ module Receipts
       setup_fonts attributes[:font]
 
       @title = attributes.fetch(:title, self.class.title)
+      @attributes = attributes
+      skip_generate = attributes.delete(:skip_generate) || false
 
-      generate_from(attributes)
+      generate unless skip_generate
     end
 
-    def generate_from(attributes)
-      return if attributes.empty?
+    def generate(attributes = @attributes)
+      return if attributes.empty? || @generated.present?
 
       company = attributes.fetch(:company)
       header company: company
@@ -24,6 +26,7 @@ module Receipts
       render_billing_details company: company, recipient: attributes.fetch(:recipient)
       render_line_items attributes.fetch(:line_items)
       render_footer attributes.fetch(:footer, default_message(company: company))
+      @generated = true
     end
 
     def setup_fonts(custom_font = nil)
