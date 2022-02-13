@@ -59,7 +59,7 @@ r = Receipts::Receipt.new(
 )
 
 # Returns a string of the raw PDF
-r.render 
+r.render
 
 # Writes the PDF to disk
 r.render_file "examples/receipt.pdf"
@@ -82,6 +82,7 @@ You can pass the following options to generate a PDF:
   * `phone` - Company phone number - _Optional_
 
   * `logo` - Logo to be displayed on the receipt - _Optional_
+
     This can be either a Path, File, StringIO, or URL. Here are a few examples:
 
     ```ruby
@@ -90,6 +91,10 @@ You can pass the following options to generate a PDF:
     logo: File.open("app/assets/images/logo.png", "rb")
     logo: "https://www.ruby-lang.org/images/header-ruby-logo@2x.png" # Downloaded with OpenURI
     ```
+
+  * `logo_fallback` - String to be displayed in place of a logo if no logo was specified. - _Optional, defaults to company name_
+
+    Set to `false` to not render a fallback string at all.
 
 * `details` - Array of details about the Receipt, Invoice, Statement. Typically, this is receipt numbers, issue date, due date, status, etc.
 
@@ -112,7 +117,7 @@ Here's an example of where each option is displayed.
 
 ### Formatting
 
-`details` and `line_items` allow inline formatting with Prawn. This allows you to use HTML tags to format text: `<b>` `<i>` `<u>` `<strikethrough>` `<sub>` `<sup>` `<font>` `<color>` `<link>` 
+`details` and `line_items` allow inline formatting with Prawn. This allows you to use HTML tags to format text: `<b>` `<i>` `<u>` `<strikethrough>` `<sub>` `<sup>` `<font>` `<color>` `<link>`
 
 See [the Prawn docs](https://prawnpdf.org/api-docs/2.3.0/Prawn/Text.html#text-instance_method) for more information.
 
@@ -192,7 +197,7 @@ class ChargesController < ApplicationController
     def set_charge
       @charge = current_user.charges.find(params[:id])
     end
-        
+
     def send_pdf
       # Render the PDF in memory and send as the response
       send_data @charge.receipt.render,

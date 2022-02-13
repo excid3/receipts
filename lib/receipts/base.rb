@@ -45,14 +45,16 @@ module Receipts
 
     def header(company: {}, height: 16)
       logo = company[:logo]
+      logo_fallback = company[:logo_fallback].nil? ? company.fetch(:name) : company[:logo_fallback]
 
-      if logo.nil?
-        text company.fetch(:name), align: :right, style: :bold, size: 16, color: "4b5563"
-      else
+      if logo.nil? && logo_fallback
+        text logo_fallback, align: :right, style: :bold, size: 16, color: "4b5563"
+        move_up height
+      elsif logo.present?
         image load_image(logo), height: height, position: :right
+        move_up height
       end
 
-      move_up height
       text title, style: :bold, size: 16
     end
 
