@@ -83,8 +83,8 @@ class TestReceipts < Minitest::Test
     }
 
     # Writing receipts to files, to be visually inspected
-    { "./test/fixtures/logo.png" => "logo-from-local-file",
-      Pathname.new("test/fixtures/logo.png") => "logo-from-local-file",
+    { "./examples/images/logo.png" => "logo-from-local-file",
+      Pathname.new("examples/images/logo.png") => "logo-from-local-file",
       false => "logo-completely-disabled",
       nil => "logo-nil-outputs-company-name",
       "This is my logo" => "logo-from-string",
