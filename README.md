@@ -83,18 +83,15 @@ You can pass the following options to generate a PDF:
 
   * `logo` - Logo to be displayed on the receipt - _Optional_
 
-    This can be either a Path, File, StringIO, or URL. Here are a few examples:
+    This can be either a `Pathname`, `File`, `StringIO`, URL or `false`. Here are a few examples:
 
     ```ruby
     logo: Rails.root.join("app/assets/images/logo.png")
     logo: File.expand_path("./logo.png")
     logo: File.open("app/assets/images/logo.png", "rb")
     logo: "https://www.ruby-lang.org/images/header-ruby-logo@2x.png" # Downloaded with OpenURI
+    logo: false # do not display a logo of any kind
     ```
-
-  * `logo_fallback` - String to be displayed in place of a logo if no logo was specified. - _Optional, defaults to company name_
-
-    Set to `false` to not render a fallback string at all.
 
 * `details` - Array of details about the Receipt, Invoice, Statement. Typically, this is receipt numbers, issue date, due date, status, etc.
 

@@ -36,22 +36,18 @@ module Receipts
     end
 
     def load_image(logo)
-      if logo.is_a? String
-        logo.start_with?("http") ? URI.parse(logo).open : File.open(logo)
-      else
-        logo
-      end
+      is_url?(logo) ? URI.parse(logo).open : logo
     end
 
     def header(company: {}, height: 16)
       logo = company[:logo]
-      logo_fallback = company[:logo_fallback].nil? ? company.fetch(:name) : company[:logo_fallback]
 
-      if logo.nil? && logo_fallback
-        text logo_fallback, align: :right, style: :bold, size: 16, color: "4b5563"
-        move_up height
-      elsif logo.present?
+      if logo_is_image?(logo)
         image load_image(logo), height: height, position: :right
+        move_up height
+      elsif logo.nil? || logo != false
+        str = logo || company.fetch(:name)
+        text str, align: :right, style: :bold, size: 16, color: "4b5563"
         move_up height
       end
 
@@ -99,6 +95,21 @@ module Receipts
 
     def default_message(company:)
       "For questions, contact us anytime at <color rgb='326d92'><link href='mailto:#{company.fetch(:email)}?subject=Question about my receipt'><b>#{company.fetch(:email)}</b></link></color>."
+    end
+
+    protected
+
+    def logo_is_image?(logo)
+      is_url?(logo) || logo_as_pathname(logo) || logo.is_a?(File) || logo.is_a?(StringIO)
+    end
+
+    def is_url?(logo)
+      logo.is_a?(String) && logo.match?(/^https?\:\/\//i)
+    end
+
+    def logo_as_pathname(logo)
+      return logo if logo.is_a?(Pathname)
+      Pathname.new(logo) if logo.is_a?(String) && logo.match?(/^\.?\//)
     end
   end
 end
