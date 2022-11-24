@@ -10,7 +10,7 @@
 * PDFs can now be completely customized - @excid3
 * Add line_items to Receipts - @excid3
 
-### 1.2.0
+### 1.1.2
 
 * Update design to give more room for longer product names, addresses, etc - @excid3
 

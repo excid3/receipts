@@ -208,9 +208,9 @@ class ChargesController < ApplicationController
   	def send_pdf
       # Render the PDF in memory and send as the response
       send_data @charge.receipt.render,
-          filename: "#{@charge.created_at.strftime("%Y-%m-%d")}-gorails-receipt.pdf",
-          type: "application/pdf",
-          disposition: :inline # or :attachment to download
+        filename: "#{@charge.created_at.strftime("%Y-%m-%d")}-gorails-receipt.pdf",
+        type: "application/pdf",
+        disposition: :inline # or :attachment to download
     end
 end
 ```
