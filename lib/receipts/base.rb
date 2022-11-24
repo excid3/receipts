@@ -8,7 +8,7 @@ module Receipts
 
     def initialize(attributes = {})
       super(page_size: "LETTER")
-      setup_fonts attributes[:font]
+      setup_fonts attributes.fetch(:font, Receipts.default_font)
 
       @title = attributes.fetch(:title, self.class.title)
 
