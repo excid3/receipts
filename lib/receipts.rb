@@ -9,6 +9,8 @@ module Receipts
   autoload :Receipt, "receipts/receipt"
   autoload :Statement, "receipts/statement"
 
+  @@default_font = nil
+
   # Customize the default font hash
   # default_font = {
   #   bold: "path/to/font",
