@@ -1,5 +1,9 @@
 ### Unreleased
 
+### 2.1.0
+
+* Add `Receipts.default_font` - @excid3
+
 ### 2.0.0
 
 * New, consistent layouts between Receipts, Invoices, and Statements - @excid3
