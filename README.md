@@ -118,6 +118,8 @@ You can pass the following options to generate a PDF:
   }
   ```
 
+* `logo_height` - An integer value of how tall the logo should be. Defaults to `16`
+
 Here's an example of where each option is displayed.
 
 ![options](examples/images/options.jpg)

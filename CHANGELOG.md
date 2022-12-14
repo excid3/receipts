@@ -1,5 +1,7 @@
 ### Unreleased
 
+* Add `logo_height:` option to specify the height of the logo image
+
 ### 2.1.0
 
 * Add `Receipts.default_font` - @excid3
