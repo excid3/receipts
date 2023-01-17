@@ -76,7 +76,6 @@ Receipts.default_font = {
 }
 ```
 
-
 ### Options
 
 You can pass the following options to generate a PDF:
@@ -129,6 +128,15 @@ Here's an example of where each option is displayed.
 `details` and `line_items` allow inline formatting with Prawn. This allows you to use HTML tags to format text: `<b>` `<i>` `<u>` `<strikethrough>` `<sub>` `<sup>` `<font>` `<color>` `<link>`
 
 See [the Prawn docs](https://prawnpdf.org/api-docs/2.3.0/Prawn/Text.html#text-instance_method) for more information.
+
+
+##### Page Size
+
+You can specify a different page size by passing in the `page_size` keyword argument:
+
+```ruby
+receipt = Receipts::Receipt.new page_size: "A4"
+```
 
 ### Internationalization (I18n)
 
