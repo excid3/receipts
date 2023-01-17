@@ -1,5 +1,7 @@
 ### Unreleased
 
+* Allow specifiying other page sizes - @excid3
+
 ### 2.0.0
 
 * New, consistent layouts between Receipts, Invoices, and Statements - @excid3
