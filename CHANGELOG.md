@@ -1,6 +1,12 @@
 ### Unreleased
 
 * Allow specifiying other page sizes - @excid3
+* Add `logo_height:` option to specify the height of the logo image
+
+### 2.1.0
+
+* Add `Receipts.default_font` - @excid3
+>>>>>>> 65dc0260770f3d751f67dc5433be09127367b83b
 
 ### 2.0.0
 
@@ -8,7 +14,7 @@
 * PDFs can now be completely customized - @excid3
 * Add line_items to Receipts - @excid3
 
-### 1.2.0
+### 1.1.2
 
 * Update design to give more room for longer product names, addresses, etc - @excid3
 

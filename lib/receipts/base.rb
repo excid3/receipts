@@ -8,7 +8,7 @@ module Receipts
 
     def initialize(attributes = {})
       super page_size: attributes.delete(:page_size) || "LETTER"
-      setup_fonts attributes[:font]
+      setup_fonts attributes.fetch(:font, Receipts.default_font)
 
       @title = attributes.fetch(:title, self.class.title)
 
@@ -19,7 +19,7 @@ module Receipts
       return if attributes.empty?
 
       company = attributes.fetch(:company)
-      header company: company
+      header company: company, height: attributes.fetch(:logo_height, 16)
       render_details attributes.fetch(:details)
       render_billing_details company: company, recipient: attributes.fetch(:recipient)
       render_line_items attributes.fetch(:line_items)

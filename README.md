@@ -59,11 +59,23 @@ r = Receipts::Receipt.new(
 )
 
 # Returns a string of the raw PDF
-r.render 
+r.render
 
 # Writes the PDF to disk
 r.render_file "examples/receipt.pdf"
 ```
+
+### Configuration
+
+You can specify the default font for all PDFs by defining the following in an initializer:
+
+```ruby
+Receipts.default_font = {
+  bold: Rails.root.join('app/assets/fonts/tradegothic/TradeGothic-Bold.ttf'),
+  normal: Rails.root.join('app/assets/fonts/tradegothic/TradeGothic.ttf'),
+}
+```
+
 
 ### Options
 
@@ -106,13 +118,15 @@ You can pass the following options to generate a PDF:
   }
   ```
 
+* `logo_height` - An integer value of how tall the logo should be. Defaults to `16`
+
 Here's an example of where each option is displayed.
 
 ![options](examples/images/options.jpg)
 
 ### Formatting
 
-`details` and `line_items` allow inline formatting with Prawn. This allows you to use HTML tags to format text: `<b>` `<i>` `<u>` `<strikethrough>` `<sub>` `<sup>` `<font>` `<color>` `<link>` 
+`details` and `line_items` allow inline formatting with Prawn. This allows you to use HTML tags to format text: `<b>` `<i>` `<u>` `<strikethrough>` `<sub>` `<sup>` `<font>` `<color>` `<link>`
 
 See [the Prawn docs](https://prawnpdf.org/api-docs/2.3.0/Prawn/Text.html#text-instance_method) for more information.
 
@@ -192,8 +206,8 @@ class ChargesController < ApplicationController
     def set_charge
       @charge = current_user.charges.find(params[:id])
     end
-        
-    def send_pdf
+
+  	def send_pdf
       # Render the PDF in memory and send as the response
       send_data @charge.receipt.render,
         filename: "#{@charge.created_at.strftime("%Y-%m-%d")}-gorails-receipt.pdf",
