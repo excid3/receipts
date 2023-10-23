@@ -1,4 +1,4 @@
-![travisci](https://api.travis-ci.org/excid3/receipts.svg)
+[![Tests](https://github.com/excid3/receipts/actions/workflows/ci.yml/badge.svg)](https://github.com/excid3/receipts/actions/workflows/ci.yml)
 
 # Receipts Gem
 
