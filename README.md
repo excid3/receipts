@@ -28,6 +28,7 @@ To generate a Receipt, Invoice, or Statement, create an instance and provide con
 
 ```ruby
 r = Receipts::Receipt.new(
+  # title: "Receipt",
   details: [
     ["Receipt Number", "123"],
     ["Date paid", Date.today],
@@ -242,6 +243,7 @@ Invoices follow the exact same set of steps as above. You'll simply want to modi
 
 ```ruby
 Receipts::Invoice.new(
+  # title: "Invoice",
   details: [
     ["Invoice Number", "123"],
     ["Issue Date", Date.today.strftime("%B %d, %Y")],
@@ -278,6 +280,7 @@ Statements follow the exact same set of steps as above. You'll simply want to mo
 
 ```ruby
 Receipts::Statement.new(
+  # title: "Statement",
   details: [
     ["Statement Number", "123"],
     ["Issue Date", Date.today.strftime("%B %d, %Y")],
