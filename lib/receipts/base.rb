@@ -79,11 +79,19 @@ module Receipts
       table(line_items, width: bounds.width, cell_style: {borders: [], inline_format: true, overflow: :expand})
     end
 
-    def render_line_items(line_items, margin_top: 30)
+    def render_line_items(line_items, margin_top: 30, column_widths: nil)
       move_down margin_top
 
       borders = line_items.length - 2
-      table(line_items, width: bounds.width, cell_style: {border_color: "eeeeee", inline_format: true}) do
+
+      table_options = {
+        width: bounds.width,
+        cell_style: {border_color: "eeeeee", inline_format: true}
+      }
+
+      table_options[:column_widths] = column_widths unless column_widths.nil?
+
+      table(line_items, table_options) do
         cells.padding = 6
         cells.borders = []
         row(0..borders).borders = [:bottom]

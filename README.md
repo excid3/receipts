@@ -139,6 +139,23 @@ You can specify a different page size by passing in the `page_size` keyword argu
 receipt = Receipts::Receipt.new page_size: "A4"
 ```
 
+##### Line Items Table - Column Widths
+
+You can optionally configure the line items section's columns width in order to accommodate shortcomings of Prawn's width guessing ability to render header and content reasonably sized.
+The configuration depends on your line item column count and follows the prawn/table configuration as documented [here](https://prawnpdf.org/prawn-table-manual.pdf):
+
+This will size the second column to 400 and the fourth column to 50.
+
+```ruby
+line_items: [data_array, column_widths: {1 => 400,3 => 50 }]
+```
+
+This will set all column widths, considering your table has 4 columns.
+
+```ruby
+line_items: [data_array, column_widths: [100, 200, 240]]
+```
+
 ### Internationalization (I18n)
 
 You can use `I18n.t` when rendering your receipts to internationalize them.
