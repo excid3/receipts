@@ -16,11 +16,15 @@ gem 'receipts'
 
 And then execute:
 
-    $ bundle
+```sh
+$ bundle
+```
 
 Or install it yourself as:
 
-    $ gem install receipts
+```sh
+$ gem install receipts
+```
 
 ## Usage
 
@@ -130,8 +134,7 @@ Here's an example of where each option is displayed.
 
 See [the Prawn docs](https://prawnpdf.org/api-docs/2.3.0/Prawn/Text.html#text-instance_method) for more information.
 
-
-##### Page Size
+#### Page Size
 
 You can specify a different page size by passing in the `page_size` keyword argument:
 
@@ -233,7 +236,7 @@ class ChargesController < ApplicationController
       @charge = current_user.charges.find(params[:id])
     end
 
-  	def send_pdf
+    def send_pdf
       # Render the PDF in memory and send as the response
       send_data @charge.receipt.render,
         filename: "#{@charge.created_at.strftime("%Y-%m-%d")}-gorails-receipt.pdf",
@@ -329,9 +332,8 @@ Receipts::Statement.new(
 
 ## Contributing
 
-1. Fork it ( https://github.com/excid3/receipts/fork )
+1. Fork it [https://github.com/excid3/receipts/fork](https://github.com/excid3/receipts/fork)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
-
