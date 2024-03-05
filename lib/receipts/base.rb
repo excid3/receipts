@@ -24,7 +24,7 @@ module Receipts
       render_billing_details company: company, recipient: attributes.fetch(:recipient)
       render_line_items(
         line_items: attributes.fetch(:line_items),
-        column_widths: attributes.fetch(:column_widths)
+        column_widths: attributes[:column_widths]
       )
       render_footer attributes.fetch(:footer, default_message(company: company))
     end
