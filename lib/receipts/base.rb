@@ -89,10 +89,9 @@ module Receipts
 
       table_options = {
         width: bounds.width,
-        cell_style: {border_color: "eeeeee", inline_format: true}
-      }
-
-      table_options[:column_widths] = column_widths unless column_widths.nil?
+        cell_style: {border_color: "eeeeee", inline_format: true},
+        column_widths: column_widths
+      }.compact
 
       table(line_items, table_options) do
         cells.padding = 6
