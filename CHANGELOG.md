@@ -1,12 +1,17 @@
 ### Unreleased
 
+### 2.3.0
+
+* Add `column_widths:` option to specify line item column widths #35
+
+### 2.2.0
+
 * Allow specifiying other page sizes - @excid3
 * Add `logo_height:` option to specify the height of the logo image
 
 ### 2.1.0
 
 * Add `Receipts.default_font` - @excid3
->>>>>>> 65dc0260770f3d751f67dc5433be09127367b83b
 
 ### 2.0.0
 
