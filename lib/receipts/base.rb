@@ -22,7 +22,10 @@ module Receipts
       header company: company, height: attributes.fetch(:logo_height, 16)
       render_details attributes.fetch(:details)
       render_billing_details company: company, recipient: attributes.fetch(:recipient)
-      render_line_items attributes.fetch(:line_items)
+      render_line_items(
+        line_items: attributes.fetch(:line_items),
+        column_widths: attributes.fetch(:column_widths)
+      )
       render_footer attributes.fetch(:footer, default_message(company: company))
     end
 
@@ -79,7 +82,7 @@ module Receipts
       table(line_items, width: bounds.width, cell_style: {borders: [], inline_format: true, overflow: :expand})
     end
 
-    def render_line_items(line_items, margin_top: 30, column_widths: nil)
+    def render_line_items(line_items:, margin_top: 30, column_widths: nil)
       move_down margin_top
 
       borders = line_items.length - 2
