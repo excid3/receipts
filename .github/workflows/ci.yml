@@ -6,7 +6,7 @@ on:
       - '*'
   push:
     branches:
-      - master
+      - main
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -17,7 +17,7 @@ jobs:
       BUNDLE_PATH_RELATIVE_TO_CWD: true
 
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -29,7 +29,4 @@ jobs:
         run: bundle exec standardrb
 
       - name: Run tests
-        env:
-          RAILS_ENV: test
-        run: |
-          bundle exec rake test
+        run: bundle exec rake test
