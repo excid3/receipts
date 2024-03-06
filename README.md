@@ -151,7 +151,7 @@ If not set, it will fall back to Prawn's default behavior.
 
 `details` and `line_items` allow inline formatting with Prawn. This allows you to use HTML tags to format text: `<b>` `<i>` `<u>` `<strikethrough>` `<sub>` `<sup>` `<font>` `<color>` `<link>`
 
-See [the Prawn docs](https://prawnpdf.org/docs/prawn/2.5.0/Prawn/Text.html#text-instance_method) for more information.
+See [the Prawn docs](https://prawnpdf.org/) for more information.
 
 #### Page Size
 
