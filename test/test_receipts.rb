@@ -24,7 +24,7 @@ class TestReceipts < Minitest::Test
       },
       recipient: [],
       details: [
-        [Receipt 123]
+        ["Receipt", "123"]
       ],
       line_items: [
         ["Product", "$10"]
@@ -41,7 +41,7 @@ class TestReceipts < Minitest::Test
       },
       recipient: [],
       details: [
-        [Receipt 123]
+        ["Receipt", "123"]
       ],
       line_items: [
         ["Product", "$10"]
@@ -60,7 +60,7 @@ class TestReceipts < Minitest::Test
       },
       recipient: [],
       details: [
-        [Receipt 123]
+        ["Receipt", "123"]
       ],
       line_items: [
         ["Product", "$10"]
@@ -77,7 +77,7 @@ class TestReceipts < Minitest::Test
       },
       recipient: [],
       details: [
-        [Receipt 123]
+        ["Receipt", "123"]
       ],
       line_items: [
         ["Product", "$10"]
