@@ -7,7 +7,7 @@ module Receipts
     end
 
     def initialize(attributes = {})
-      super(page_size: attributes.delete(:page_size) || "LETTER")
+      super(page_size: attributes.delete(:page_size) || 'LETTER')
       setup_fonts attributes.fetch(:font, Receipts.default_font)
 
       @title = attributes.fetch(:title, self.class.title)
@@ -31,8 +31,8 @@ module Receipts
 
     def setup_fonts(custom_font = nil)
       if !!custom_font
-        font_families.update "Primary" => custom_font
-        font "Primary"
+        font_families.update 'Primary' => custom_font
+        font 'Primary'
       end
 
       font_size 8
@@ -40,7 +40,7 @@ module Receipts
 
     def load_image(logo)
       if logo.is_a? String
-        logo.start_with?("http") ? URI.parse(logo).open : File.open(logo)
+        logo.start_with?('http') ? URI.parse(logo).open : File.open(logo)
       else
         logo
       end
@@ -50,7 +50,7 @@ module Receipts
       logo = company[:logo]
 
       if logo.nil?
-        text company.fetch(:name), align: :right, style: :bold, size: 16, color: "4b5563"
+        text company.fetch(:name), align: :right, style: :bold, size: 16, color: '4b5563'
       else
         image load_image(logo), height: height, position: :right
       end
@@ -61,13 +61,15 @@ module Receipts
 
     def render_details(details, margin_top: 16)
       move_down margin_top
-      table(details, cell_style: {borders: [], inline_format: true, padding: [0, 8, 2, 0]})
+      table(details, cell_style: { borders: [], inline_format: true, padding: [0, 8, 2, 0] })
     end
 
     def render_billing_details(company:, recipient:, margin_top: 16)
       move_down margin_top
 
       company_details = [
+        company[:company_code],
+        company[:iban],
         company[:address],
         company[:phone],
         company[:email]
@@ -75,11 +77,11 @@ module Receipts
 
       line_items = [
         [
-          {content: "<b>#{company.fetch(:name)}</b>\n#{company_details}", padding: [0, 12, 0, 0]},
-          {content: Array(recipient).join("\n"), padding: [0, 12, 0, 0]}
+          { content: "<b>#{company.fetch(:name)}</b>\n#{company_details}", padding: [0, 12, 0, 0] },
+          { content: Array(recipient).join("\n"), padding: [0, 12, 0, 0] }
         ]
       ]
-      table(line_items, width: bounds.width, cell_style: {borders: [], inline_format: true, overflow: :expand})
+      table(line_items, width: bounds.width, cell_style: { borders: [], inline_format: true, overflow: :expand })
     end
 
     def render_line_items(line_items:, margin_top: 30, column_widths: nil)
@@ -89,7 +91,7 @@ module Receipts
 
       table_options = {
         width: bounds.width,
-        cell_style: {border_color: "eeeeee", inline_format: true},
+        cell_style: { border_color: 'eeeeee', inline_format: true },
         column_widths: column_widths
       }.compact
 
