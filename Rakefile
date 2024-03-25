@@ -36,7 +36,9 @@ task :receipt do
       address: "123 Fake Street\nNew York City, NY 10012",
       phone: "(555) 867-5309",
       email: "support@example.com",
-      logo: File.expand_path("./examples/images/logo.png")
+      tax_id: "Tax ID: 123456789",
+      logo: File.expand_path("./examples/images/logo.png"),
+      printable_details: [:tax_id, nil, :address, :phone, :email]
     },
     details: [
       ["Receipt Number", "123"],
