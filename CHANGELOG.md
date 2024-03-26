@@ -1,5 +1,22 @@
 ### Unreleased
 
+* Add `display: []` for configuring company details that are rendered
+
+```ruby
+r = Receipts::Receipt.new(
+  company: {
+    name: "Example, LLC",
+    address: "123 Fake Street\nNew York City, NY 10012",
+    phone: "(555) 867-5309",
+    email: "support@example.com",
+    iban: "123456789",
+    logo: File.expand_path("./examples/images/logo.png"),
+    display: [:address, :phone, :email, :iban]
+  },
+  # ...
+)
+```
+
 ### 2.3.0
 
 * Add `column_widths:` option to specify line item column widths #35
