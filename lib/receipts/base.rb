@@ -64,14 +64,11 @@ module Receipts
       table(details, cell_style: {borders: [], inline_format: true, padding: [0, 8, 2, 0]})
     end
 
-    def render_billing_details(company:, recipient:, margin_top: 16)
+    def render_billing_details(company:, recipient:, margin_top: 16, display_values: nil)
       move_down margin_top
 
-      company_details = [
-        company[:address],
-        company[:phone],
-        company[:email]
-      ].compact.join("\n")
+      display_values ||= company.fetch(:display, [:address, :phone, :email])
+      company_details = company.values_at(*display_values).compact.join("\n")
 
       line_items = [
         [

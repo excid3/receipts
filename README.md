@@ -107,6 +107,8 @@ You can pass the following options to generate a PDF:
     logo: "https://www.ruby-lang.org/images/header-ruby-logo@2x.png" # Downloaded with OpenURI
     ```
 
+  * `display: []` - Customize the company details rendered. By default, renders `[:address, :phone, :email]` under the company name. Items in the array should be Symbols matching keys in the `company` hash to be displayed.
+
 * `details` - Array of details about the Receipt, Invoice, Statement. Typically, this is receipt numbers, issue date, due date, status, etc.
 
 * `line_items` - Array of line items to be displayed in table format.
