@@ -7,8 +7,8 @@ module Receipts
     end
 
     def initialize(attributes = {})
-      super(page_size: "LETTER")
-      setup_fonts attributes[:font]
+      super(page_size: attributes.delete(:page_size) || "LETTER")
+      setup_fonts attributes.fetch(:font, Receipts.default_font)
 
       @title = attributes.fetch(:title, self.class.title)
 
@@ -19,10 +19,13 @@ module Receipts
       return if attributes.empty?
 
       company = attributes.fetch(:company)
-      header company: company
+      header company: company, height: attributes.fetch(:logo_height, 16)
       render_details attributes.fetch(:details)
       render_billing_details company: company, recipient: attributes.fetch(:recipient)
-      render_line_items attributes.fetch(:line_items)
+      render_line_items(
+        line_items: attributes.fetch(:line_items),
+        column_widths: attributes[:column_widths]
+      )
       render_footer attributes.fetch(:footer, default_message(company: company))
     end
 
@@ -61,14 +64,11 @@ module Receipts
       table(details, cell_style: {borders: [], inline_format: true, padding: [0, 8, 2, 0]})
     end
 
-    def render_billing_details(company:, recipient:, margin_top: 16)
+    def render_billing_details(company:, recipient:, margin_top: 16, display_values: nil)
       move_down margin_top
 
-      company_details = [
-        company[:address],
-        company[:phone],
-        company[:email]
-      ].compact.join("\n")
+      display_values ||= company.fetch(:display, [:address, :phone, :email])
+      company_details = company.values_at(*display_values).compact.join("\n")
 
       line_items = [
         [
@@ -79,11 +79,18 @@ module Receipts
       table(line_items, width: bounds.width, cell_style: {borders: [], inline_format: true, overflow: :expand})
     end
 
-    def render_line_items(line_items, margin_top: 30)
+    def render_line_items(line_items:, margin_top: 30, column_widths: nil)
       move_down margin_top
 
       borders = line_items.length - 2
-      table(line_items, width: bounds.width, cell_style: {border_color: "eeeeee", inline_format: true}) do
+
+      table_options = {
+        width: bounds.width,
+        cell_style: {border_color: "eeeeee", inline_format: true},
+        column_widths: column_widths
+      }.compact
+
+      table(line_items, table_options) do
         cells.padding = 6
         cells.borders = []
         row(0..borders).borders = [:bottom]
