@@ -1,5 +1,7 @@
 ### Unreleased
 
+### 2.4.0
+
 * Add `display: []` for configuring company details that are rendered
 
 ```ruby
