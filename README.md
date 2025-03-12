@@ -193,7 +193,7 @@ You can also use the Receipts helpers in your custom PDFs at the current cursor 
 
 ```ruby
 receipt.text("Custom header")
-receipt.render_line_items([
+receipt.render_line_items(line_items: [
   ["my line items"]
 ])
 receipt.render_footer("This is a custom footer using the Receipts helper")
