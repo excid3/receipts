@@ -43,13 +43,14 @@ class TestPDF < Minitest::Test
   def test_font_subset_is_valid_true_type
     ttf = Receipts::PDF::TrueType.load(FONT)
     gids = "Hello Ωμέγα Щ".each_char.map { |c| ttf.glyph_id(c.ord) }
-    data = ttf.subset(gids)
+    data, mapping = ttf.subset(gids)
     tables = data.unpack1("x4n").times.map { |i| data.byteslice(12 + i * 16, 16).unpack("a4x4NN") }.to_h { |tag, offset, length| [tag, data.byteslice(offset, length)] }
     num_glyphs = tables["maxp"].unpack1("x4n")
     advances = tables["hmtx"].unpack("n*").each_slice(2).map(&:first)
 
-    assert_equal gids.max + 1, num_glyphs
-    gids.each { |gid| assert_equal ttf.advance(gid), advances[gid] }
+    assert_equal mapping.size, num_glyphs
+    assert_equal (0...mapping.size).to_a, mapping.values.sort
+    gids.each { |gid| assert_equal ttf.advance(gid), advances[mapping.fetch(gid)] }
     assert_equal 0xB1B0AFBA, data.unpack("N*").sum & 0xFFFFFFFF
     assert_operator data.bytesize, :<, File.size(FONT) / 4
   end

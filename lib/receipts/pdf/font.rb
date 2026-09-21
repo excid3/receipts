@@ -52,7 +52,7 @@ module Receipts
         @ttf.weight >= 600
       end
 
-      # Encodes text as 2-byte glyph IDs (Identity-H encoding)
+      # Encodes text as 2-byte original glyph IDs (Identity-H encoding)
       def encode(text)
         text.each_char.map do |char|
           gid = @ttf.glyph_id(char.ord)
@@ -63,7 +63,7 @@ module Receipts
 
       def build(writer)
         gids = @used.keys.sort
-        subset = @ttf.subset(gids)
+        subset, mapping = @ttf.subset(gids)
         name = :"#{subset_tag(gids)}+#{@ttf.postscript_name}"
 
         font_file = writer.add(Stream.new(subset, {Length1: subset.bytesize}))
@@ -88,7 +88,7 @@ module Receipts
           FontDescriptor: descriptor,
           DW: to_glyph_space(@ttf.advance(0)),
           W: glyph_widths(gids),
-          CIDToGIDMap: :Identity
+          CIDToGIDMap: writer.add(Stream.new(cid_to_gid_map(gids, mapping)))
         )
         writer.add(
           Type: :Font,
@@ -117,9 +117,16 @@ module Receipts
         flags
       end
 
-      # Subset fonts are named with a tag of 6 uppercase letters, like ABCDEF+NotoSans-Regular
+      # Subset fonts are named with a tag of 6 uppercase letters, like ABCDEF+Inter-Regular
       def subset_tag(gids)
         Digest::MD5.digest(gids.pack("n*") + @ttf.postscript_name).bytes.first(6).map { |b| (65 + b % 26).chr }.join
+      end
+
+      # Text is encoded with the original glyph IDs as CIDs. This maps them to the renumbered subset glyphs.
+      def cid_to_gid_map(gids, mapping)
+        map = Array.new((gids.max || 0) + 1, 0)
+        gids.each { |gid| map[gid] = mapping.fetch(gid) }
+        map.pack("n*")
       end
 
       # Widths array grouping consecutive glyph IDs: [first [w1 w2 ...] first [w1 ...]]

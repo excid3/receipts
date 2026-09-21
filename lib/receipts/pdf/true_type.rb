@@ -73,19 +73,18 @@ module Receipts
         @fixed_pitch
       end
 
-      # Builds a font containing only the given glyphs (plus composite glyph parts).
-      # Glyph IDs are preserved: unused glyphs are left empty rather than renumbered,
-      # so text can be encoded with the original glyph IDs.
+      # Builds a font containing only the given glyphs (plus composite glyph parts),
+      # renumbered compactly. Returns the font data and a Hash of original to new glyph IDs.
       def subset(gids)
-        glyphs = glyph_closure(Set.new(gids) << 0)
-        count = glyphs.max + 1
+        glyphs = glyph_closure(Set.new(gids) << 0).sort
+        mapping = glyphs.each_with_index.to_h
+        count = glyphs.size
 
         glyf = String.new(encoding: Encoding::BINARY)
         loca = []
-        count.times do |gid|
+        glyphs.each do |gid|
           loca << glyf.bytesize
-          next unless glyphs.include?(gid)
-          data = glyph_data(gid)
+          data = remap_components(glyph_data(gid), mapping)
           glyf << data << padding(data)
         end
         loca << glyf.bytesize
@@ -100,7 +99,7 @@ module Receipts
         maxp = table_data("maxp").dup
         maxp[4, 2] = [count].pack("n") # numGlyphs
 
-        hmtx = Array.new(count) { |gid| [advance(gid), left_side_bearing(gid)] }.flatten.pack("ns>" * count)
+        hmtx = glyphs.flat_map { |gid| [advance(gid), left_side_bearing(gid)] }.pack("ns>" * count)
 
         tables = {"head" => head, "hhea" => hhea, "maxp" => maxp, "hmtx" => hmtx, "loca" => loca.pack("N*"), "glyf" => glyf}
         HINTING_TABLES.each { |tag| tables[tag] = table_data(tag) if @tables[tag] }
@@ -112,7 +111,7 @@ module Receipts
           tables["post"] = post
         end
 
-        build_font(tables)
+        [build_font(tables), mapping]
       end
 
       private
@@ -195,21 +194,30 @@ module Receipts
         until queue.empty?
           gid = queue.pop
           next if gid >= @num_glyphs || !glyphs.add?(gid)
-          queue.concat(glyph_components(gid))
+          each_component(glyph_data(gid)) { |_, component| queue << component }
         end
         glyphs
       end
 
-      # Composite glyphs reference other glyphs that must also be included
-      def glyph_components(gid)
-        data = glyph_data(gid)
-        return [] if data.bytesize < 10 || data.unpack1("s>") >= 0
+      # Points composite glyphs at the renumbered IDs of their components
+      def remap_components(data, mapping)
+        copy = nil
+        each_component(data) do |pos, component|
+          copy ||= data.dup
+          copy[pos, 2] = [mapping.fetch(component, 0)].pack("n")
+        end
+        copy || data
+      end
 
-        components = []
+      # Composite glyphs reference other glyphs. Yields the byte offset of each
+      # component's glyph ID and the ID.
+      def each_component(data)
+        return if data.bytesize < 10 || data.unpack1("s>") >= 0
+
         pos = 10
         loop do
           flags, component = data.byteslice(pos, 4).unpack("nn")
-          components << component
+          yield pos + 2, component
           pos += 4
           pos += (flags & 0x0001).zero? ? 2 : 4 # ARG_1_AND_2_ARE_WORDS
           if flags & 0x0008 != 0 # WE_HAVE_A_SCALE
@@ -221,7 +229,6 @@ module Receipts
           end
           break if (flags & 0x0020).zero? # MORE_COMPONENTS
         end
-        components
       end
 
       def parse_cmap
