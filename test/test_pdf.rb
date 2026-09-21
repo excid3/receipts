@@ -113,6 +113,30 @@ class TestPDF < Minitest::Test
     assert_in_delta doc.width_of("Label") + 10, label, 0.01
   end
 
+  def test_table_columns_fit_width_when_words_are_too_long
+    doc = Receipts::PDF::Document.new
+    words = "Supercalifragilistic Antidisestablishmentarianism"
+    table = Receipts::PDF::Table.new(doc, [[words, words, words, "x" * 40]], width: 300)
+
+    assert_in_delta 300, table.column_widths.sum, 0.01
+    assert table.column_widths.all?(&:positive?)
+  end
+
+  def test_table_keeps_widest_words_when_they_fit
+    doc = Receipts::PDF::Document.new
+    table = Receipts::PDF::Table.new(doc, [["Supercalifragilistic " * 10, "tiny " * 200]], width: 400)
+    wide, _ = table.column_widths
+
+    assert_in_delta 400, table.column_widths.sum, 0.01
+    assert_operator wide, :>=, doc.width_of("Supercalifragilistic") + 10 - 0.01
+  end
+
+  def test_table_header_false
+    doc = Receipts::PDF::Document.new
+    Receipts::PDF::Table.new(doc, [["a", "b"]] * 100, header: false).draw
+    assert_operator doc.page_count, :>, 1
+  end
+
   def test_table_column_widths_option
     doc = Receipts::PDF::Document.new
     table = Receipts::PDF::Table.new(doc, [["a", "b", "c"]], width: 300, column_widths: [100, nil, 50])

@@ -131,7 +131,11 @@ module Receipts
         bounds = @document.bounds
         x = bounds.absolute_left + Geometry.align_offset(@position, bounds.width, widths.sum)
 
-        header_count = (@header == true) ? 1 : @header.to_i
+        header_count = case @header
+        when true then 1
+        when Integer then @header
+        else 0
+        end
         headers = @rows.first(header_count).map { |row| [row, *layout_row(row, widths)] }
 
         @rows.each_with_index do |row, index|
@@ -185,7 +189,7 @@ module Receipts
       end
 
       # Columns start at their natural (unwrapped) width. When the table is too wide,
-      # narrow columns keep their width and wider columns shrink proportionally.
+      # narrow columns keep their width and wider columns shrink proportionally, never past the table width.
       # When a table width is given and there's space left over, it's split evenly between columns.
       def compute_column_widths
         count = @rows.first&.size || 0
@@ -220,8 +224,20 @@ module Receipts
             break if columns.empty?
           end
 
+          # The rest share the budget in proportion to their natural width, but not below their widest
+          # word. If the widest words can't all fit, words are broken rather than overflowing the table.
+          loop do
+            total = columns.sum { |i| natural[i] }
+            break if total.zero?
+            short = columns.select { |i| budget * natural[i] / total < minimum[i] }
+            break if short.empty? || short.sum { |i| minimum[i] } >= budget
+            short.each { |i| widths[i] = minimum[i] }
+            budget -= short.sum { |i| minimum[i] }
+            columns -= short
+          end
+
           total = columns.sum { |i| natural[i] }
-          columns.each { |i| widths[i] = total.zero? ? minimum[i] : [budget * natural[i] / total, minimum[i]].max }
+          columns.each { |i| widths[i] = total.zero? ? 0 : [budget * natural[i] / total, 0].max }
         elsif @width && flexible_natural < available
           extra = (available - flexible_natural) / flexible.size.to_f
           flexible.each { |i| widths[i] += extra }
