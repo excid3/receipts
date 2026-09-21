@@ -9,7 +9,7 @@
 
 ### 2.4.0
 
-* Add `display: []` for configuring company details that are rendered
+* Add `display: []` for configuring company details that are rendered #38 - @excid3
 
 ```ruby
 r = Receipts::Receipt.new(
@@ -25,6 +25,8 @@ r = Receipts::Receipt.new(
   # ...
 )
 ```
+
+* Fix Prawn docs link in README #36 - @ocarreterom
 
 ### 2.3.0
 
