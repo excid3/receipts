@@ -72,7 +72,7 @@ r.render_file "examples/receipt.pdf"
 
 ### Configuration
 
-PDFs use the bundled [Noto Sans](https://fonts.google.com/noto/specimen/Noto+Sans) font by default, which supports Latin, Greek, and Cyrillic characters.
+PDFs use the bundled [Inter](https://rsms.me/inter/) font by default, which supports Latin, Greek, and Cyrillic characters.
 
 You can specify a different default font for all PDFs by defining the following in an initializer:
 

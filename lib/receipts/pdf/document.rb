@@ -15,10 +15,10 @@ module Receipts
       }.freeze
 
       FONTS_PATH = File.expand_path("../fonts", __dir__)
-      DEFAULT_FONT_FAMILY = "Noto Sans"
+      DEFAULT_FONT_FAMILY = "Inter"
       DEFAULT_FONT = {
-        normal: File.join(FONTS_PATH, "NotoSans-Regular.ttf"),
-        bold: File.join(FONTS_PATH, "NotoSans-Bold.ttf")
+        normal: File.join(FONTS_PATH, "Inter-Regular.ttf"),
+        bold: File.join(FONTS_PATH, "Inter-Bold.ttf")
       }.freeze
 
       # The area inside the page margins. Like Prawn, `left`, `right`, `top` and
