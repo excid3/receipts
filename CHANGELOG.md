@@ -1,8 +1,16 @@
 ### Unreleased
 
+### 3.0.0
+
+* Replace Prawn with a built-in, pure Ruby PDF generator. Receipts no longer has any gem dependencies.
+* Embed the Inter font by default, adding Unicode support (Latin, Greek, Cyrillic) without configuring a custom font
+* Custom fonts must be TrueType (`.ttf`) files; only used characters are embedded
+* **Breaking:** Receipts objects inherit from `Receipts::PDF::Document` instead of `Prawn::Document`. Custom content using Prawn APIs beyond `text`, `image`, `table`, `move_down`/`move_up`, `font`, `font_size`, `bounds` and `start_new_page` needs updating.
+* **Breaking:** Table cells no longer accept Prawn's `overflow:` option. Rows always grow to fit their content, so remove `overflow:` from any custom `cell_style`.
+
 ### 2.4.0
 
-* Add `display: []` for configuring company details that are rendered
+* Add `display: []` for configuring company details that are rendered #38 - @excid3
 
 ```ruby
 r = Receipts::Receipt.new(
@@ -18,6 +26,8 @@ r = Receipts::Receipt.new(
   # ...
 )
 ```
+
+* Fix Prawn docs link in README #36 - @ocarreterom
 
 ### 2.3.0
 

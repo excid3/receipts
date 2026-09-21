@@ -2,7 +2,7 @@
 
 # Receipts Gem
 
-Receipts, Invoices, and Statements for your Rails application that works with any payment provider. Receipts uses Prawn to generate the PDFs.
+Receipts, Invoices, and Statements for your Rails application that works with any payment provider. PDFs are generated in pure Ruby with no dependencies.
 
 Check out the [example PDFs](https://github.com/excid3/receipts/blob/master/examples/).
 
@@ -72,7 +72,9 @@ r.render_file "examples/receipt.pdf"
 
 ### Configuration
 
-You can specify the default font for all PDFs by defining the following in an initializer:
+PDFs use the bundled [Inter](https://rsms.me/inter/) font by default, which supports Latin, Greek, and Cyrillic characters.
+
+You can specify a different default font for all PDFs by defining the following in an initializer:
 
 ```ruby
 Receipts.default_font = {
@@ -80,6 +82,8 @@ Receipts.default_font = {
   normal: Rails.root.join('app/assets/fonts/tradegothic/TradeGothic.ttf'),
 }
 ```
+
+Fonts must be TrueType (`.ttf`) files. Only the characters used are embedded in each PDF. You may also provide `italic:` and `bold_italic:` fonts; otherwise italic text is simulated by slanting the normal font.
 
 ### Options
 
@@ -132,8 +136,7 @@ Here's an example of where each option is displayed.
 
 #### Line Items Table - Column Widths
 
-You may set an option to configure the line items table's columns width in order to accommodate shortcomings of Prawn's width guessing ability to render header and content reasonably sized.
-The configuration depends on your line item column count and follows the prawn/table configuration as documented [here](https://prawnpdf.org/prawn-table-manual.pdf):
+By default, columns are sized to fit their content and any leftover space is split evenly between columns. You may set the width of specific columns in points (1/72 inch) to override this.
 
 This will size the second column to 400 and the fourth column to 50.
 
@@ -147,13 +150,18 @@ This will set all column widths, considering your table has 4 columns.
 column_widths: [100, 200, 240]
 ```
 
-If not set, it will fall back to Prawn's default behavior.
+Columns without a width are sized automatically.
 
 ### Formatting
 
-`details` and `line_items` allow inline formatting with Prawn. This allows you to use HTML tags to format text: `<b>` `<i>` `<u>` `<strikethrough>` `<sub>` `<sup>` `<font>` `<color>` `<link>`
+`details`, `line_items`, `recipient` and `footer` allow inline formatting using HTML-like tags:
 
-See [the Prawn docs](https://prawnpdf.org/) for more information.
+* `<b>` / `<strong>`, `<i>` / `<em>`, `<u>`, `<strikethrough>`, `<sub>`, `<sup>`, `<br>`
+* `<font name="Primary" size="12" character_spacing="1">`
+* `<color rgb="#5eba7d">` or `<color c="0" m="100" y="100" k="0">`
+* `<link href="https://example.com">`
+
+Use `&lt;`, `&gt;` and `&amp;` for literal `<`, `>` and `&` characters.
 
 #### Page Size
 
@@ -183,11 +191,22 @@ You can change the entire PDF content by instantiating an Receipts object withou
 receipt = Receipts::Receipt.new # creates an empty PDF
 ```
 
-Each Receipts object inherits from Prawn::Document. This allows you to choose what is rendered and include any custom Prawn content you like.
+Each Receipts object inherits from `Receipts::PDF::Document`, which provides a small, Prawn-like API for adding your own content:
 
 ```ruby
-receipt.text("hello world")
+receipt.text("hello world", size: 12, style: :bold, align: :center, color: "4b5563")
+receipt.text("<b>Bold</b> and <i>italic</i>", inline_format: true)
+receipt.move_down 20
+receipt.image "logo.png", height: 24, position: :right
+receipt.table([["Item", "Amount"], ["Product", "$10"]], width: receipt.bounds.width) do
+  row(0).font_style = :bold
+  column(1).align = :right
+end
+receipt.stroke_horizontal_rule
+receipt.start_new_page
 ```
+
+Images must be PNG (non-interlaced) or JPEG files.
 
 You can also use the Receipts helpers in your custom PDFs at the current cursor position.
 
