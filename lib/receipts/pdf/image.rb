@@ -5,6 +5,11 @@ module Receipts
     module Image
       PNG_SIGNATURE = "\x89PNG\r\n\x1A\n".b
 
+      # Recently used images, keyed by content, so a logo used on every receipt is only decoded once
+      CACHE = {}
+      CACHE_MUTEX = Mutex.new
+      CACHE_SIZE = 16
+
       # Accepts a path, Pathname, or IO-like object
       def self.load(source)
         data = if source.respond_to?(:read)
@@ -15,6 +20,15 @@ module Receipts
           File.binread(source.to_s)
         end.b
 
+        key = Digest::MD5.digest(data)
+        CACHE_MUTEX.synchronize do
+          CACHE[key] ||= parse(data)
+          CACHE.shift while CACHE.size > CACHE_SIZE
+          CACHE[key]
+        end
+      end
+
+      def self.parse(data)
         if data.start_with?("\xFF\xD8".b)
           JPEG.new(data)
         elsif data.start_with?(PNG_SIGNATURE)
@@ -98,59 +112,62 @@ module Receipts
         end
 
         def build(writer)
-          case @color_type
-          when 0, 2, 3
-            # Compressed PNG data can be embedded directly using the PNG predictor
-            dictionary = Image.xobject(@width, @height, color_space, @bit_depth).merge(
-              Filter: :FlateDecode,
-              DecodeParms: {Predictor: 15, Colors: CHANNELS[@color_type], BitsPerComponent: @bit_depth, Columns: @width}
-            )
-
-            if @transparency && @color_type == 3
-              dictionary[:SMask] = soft_mask(writer, palette_alpha)
-            elsif @transparency
-              # Color key masking: [min max] per channel
-              dictionary[:Mask] = @transparency.unpack("n*").first(CHANNELS[@color_type]).flat_map { |v| [v, v] }
-            end
-
-            writer.add(Stream.new(@idat, dictionary))
-          when 4, 6
-            color, alpha = split_alpha
-            color_space = (@color_type == 6) ? :DeviceRGB : :DeviceGray
-            dictionary = Image.xobject(@width, @height, color_space, 8).merge(SMask: soft_mask(writer, alpha))
-            writer.add(Stream.new(color, dictionary))
+          if @color_type == 4 || @color_type == 6
+            dictionary = Image.xobject(@width, @height, color_space, 8).merge(Filter: :FlateDecode, SMask: soft_mask(writer))
+            return writer.add(Stream.new(decoded[:color], dictionary))
           end
+
+          # Compressed PNG data can be embedded directly using the PNG predictor
+          dictionary = Image.xobject(@width, @height, color_space, @bit_depth).merge(
+            Filter: :FlateDecode,
+            DecodeParms: {Predictor: 15, Colors: CHANNELS[@color_type], BitsPerComponent: @bit_depth, Columns: @width}
+          )
+
+          if @transparency && @color_type == 3
+            dictionary[:SMask] = soft_mask(writer)
+          elsif @transparency
+            # Color key masking: [min max] per channel
+            dictionary[:Mask] = @transparency.unpack("n*").first(CHANNELS[@color_type]).flat_map { |v| [v, v] }
+          end
+
+          writer.add(Stream.new(@idat, dictionary))
         end
 
         private
 
         def color_space
           case @color_type
-          when 0 then :DeviceGray
-          when 2 then :DeviceRGB
+          when 0, 4 then :DeviceGray
+          when 2, 6 then :DeviceRGB
           when 3 then [:Indexed, :DeviceRGB, @palette.bytesize / 3 - 1, HexString.new(@palette)]
           end
         end
 
-        def soft_mask(writer, alpha)
-          writer.add(Stream.new(alpha, Image.xobject(@width, @height, :DeviceGray, 8)))
+        def soft_mask(writer)
+          dictionary = Image.xobject(@width, @height, :DeviceGray, 8).merge(Filter: :FlateDecode)
+          writer.add(Stream.new(decoded[:alpha], dictionary))
+        end
+
+        # Compressed color and alpha data, memoized since images are cached across documents
+        def decoded
+          @decoded ||= begin
+            color, alpha = (@color_type == 3) ? [nil, palette_alpha] : split_alpha
+            {color: color && Zlib::Deflate.deflate(color), alpha: Zlib::Deflate.deflate(alpha)}
+          end
         end
 
         # Alpha channel for palette images from the per-palette-entry tRNS values
         def palette_alpha
           alphas = @transparency.bytes
-          row_bytes = (@width * @bit_depth + 7) / 8
-          pixels = unfilter(1, row_bytes)
           alpha = String.new(capacity: @width * @height, encoding: Encoding::BINARY)
 
-          @height.times do |y|
-            row = pixels.byteslice(y * row_bytes, row_bytes)
+          each_row(1, (@width * @bit_depth + 7) / 8) do |row|
             indexes = if @bit_depth == 8
-              row.bytes
+              row
             else
-              row.unpack1("B*").scan(/.{#{@bit_depth}}/).first(@width).map { |bits| bits.to_i(2) }
+              row.pack("C*").unpack1("B*").scan(/.{#{@bit_depth}}/).first(@width).map { |bits| bits.to_i(2) }
             end
-            indexes.each { |index| alpha << (alphas[index] || 255) }
+            alpha << indexes.map { |index| alphas[index] || 255 }.pack("C*")
           end
           alpha
         end
@@ -160,21 +177,22 @@ module Receipts
           channels = CHANNELS[@color_type]
           sample = @bit_depth / 8
           step = channels * sample
-          bytes = unfilter(step, @width * step).bytes
+          # Positions of each sample's high byte within a row
+          color_bytes = Array.new(@width) { |x| Array.new(channels - 1) { |c| x * step + c * sample } }.flatten
+          alpha_bytes = Array.new(@width) { |x| x * step + (channels - 1) * sample }
 
           color = String.new(capacity: @width * @height * (channels - 1), encoding: Encoding::BINARY)
           alpha = String.new(capacity: @width * @height, encoding: Encoding::BINARY)
-          (0...bytes.size).step(step) do |i|
-            (channels - 1).times { |c| color << bytes[i + c * sample] }
-            alpha << bytes[i + (channels - 1) * sample]
+          each_row(step, @width * step) do |row|
+            color << row.values_at(*color_bytes).pack("C*")
+            alpha << row.values_at(*alpha_bytes).pack("C*")
           end
           [color, alpha]
         end
 
-        # Decompresses the image data and reverses the per-row PNG filters
-        def unfilter(bpp, row_bytes)
+        # Decompresses the image data and reverses the per-row PNG filters, yielding each row's bytes
+        def each_row(bpp, row_bytes)
           data = Zlib::Inflate.inflate(@idat)
-          out = String.new(capacity: row_bytes * @height, encoding: Encoding::BINARY)
           previous = Array.new(row_bytes, 0)
 
           @height.times do |y|
@@ -214,10 +232,9 @@ module Receipts
               raise UnsupportedImageError, "invalid PNG filter type: #{filter}"
             end
 
-            out << row.pack("C*")
+            yield row
             previous = row
           end
-          out
         end
       end
     end

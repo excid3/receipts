@@ -8,7 +8,11 @@ module Receipts
       Style = Struct.new(:font, :size, :color, :link, :underline, :strikethrough, :rise,
         :character_spacing, :oblique, :fake_bold, keyword_init: true)
       Run = Struct.new(:text, :style, :width)
-      Line = Struct.new(:runs, :width, :ascender, :descender, :line_gap)
+      Line = Struct.new(:runs, :width, :ascender, :descender, :line_gap) do
+        def height
+          ascender + descender
+        end
+      end
 
       EPSILON = 0.0001
 
@@ -24,7 +28,7 @@ module Receipts
           pending_width = 0
 
           items(paragraph).each do |type, pieces|
-            width = pieces.sum { |text, style| measure(text, style) }
+            width = measure_pieces(pieces)
 
             if type == :space
               next if line.empty?
@@ -61,24 +65,28 @@ module Receipts
       # Width of the text without wrapping
       def natural_width(chunks, default_style)
         paragraphs(chunks, default_style).map do |_, paragraph|
-          paragraph.sum { |text, style| measure(text, style) }
+          measure_pieces(paragraph)
         end.max || 0
       end
 
       # Width of the widest word, the narrowest the text can wrap without breaking words
       def minimum_width(chunks, default_style)
         paragraphs(chunks, default_style).flat_map do |_, paragraph|
-          items(paragraph).map { |type, pieces| (type == :word) ? pieces.sum { |text, style| measure(text, style) } : 0 }
+          items(paragraph).map { |type, pieces| (type == :word) ? measure_pieces(pieces) : 0 }
         end.max || 0
       end
 
       def height_of(lines, leading = 0)
         return 0 if lines.empty?
-        lines.sum { |line| line.ascender + line.descender } + lines[0...-1].sum { |line| line.line_gap + leading }
+        lines.sum(&:height) + lines[0...-1].sum { |line| line.line_gap + leading }
       end
 
       def measure(text, style)
         style.font.width_of(text, style.size, character_spacing: style.character_spacing)
+      end
+
+      def measure_pieces(pieces)
+        pieces.sum { |text, style| measure(text, style) }
       end
 
       # Splits chunks at newlines. Empty paragraphs keep the style of the text around them for their height.

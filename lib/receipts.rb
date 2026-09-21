@@ -1,5 +1,6 @@
 require "receipts/version"
 require "open-uri"
+require "receipts/pdf/geometry"
 require "receipts/pdf/writer"
 require "receipts/pdf/true_type"
 require "receipts/pdf/font"

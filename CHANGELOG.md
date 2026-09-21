@@ -6,6 +6,7 @@
 * Embed the Inter font by default, adding Unicode support (Latin, Greek, Cyrillic) without configuring a custom font
 * Custom fonts must be TrueType (`.ttf`) files; only used characters are embedded
 * **Breaking:** Receipts objects inherit from `Receipts::PDF::Document` instead of `Prawn::Document`. Custom content using Prawn APIs beyond `text`, `image`, `table`, `move_down`/`move_up`, `font`, `font_size`, `bounds` and `start_new_page` needs updating.
+* **Breaking:** Table cells no longer accept Prawn's `overflow:` option. Rows always grow to fit their content, so remove `overflow:` from any custom `cell_style`.
 
 ### 2.4.0
 

@@ -11,13 +11,13 @@ module Receipts
     # Cells may be strings, nil, or hashes with :content and cell options.
     class Table
       class Cell
-        attr_accessor :content, :borders, :border_color, :border_width, :align, :font_style,
-          :size, :text_color, :background_color, :inline_format, :font, :leading, :overflow
-        attr_reader :padding
+        attr_accessor :borders, :border_color, :border_width, :align, :font_style,
+          :size, :text_color, :background_color, :inline_format, :font, :leading
+        attr_reader :content, :padding
 
-        def initialize(document, content, options = {})
+        def initialize(document, options = {})
           @document = document
-          @content = content.to_s
+          @content = ""
           @padding = [5, 5, 5, 5]
           @borders = [:top, :right, :bottom, :left]
           @border_color = "000000"
@@ -28,8 +28,12 @@ module Receipts
           options.each { |key, value| public_send(:"#{key}=", value) }
         end
 
+        def content=(value)
+          @content = value.to_s
+        end
+
         def padding=(value)
-          @padding = @document.expand_box(value)
+          @padding = Geometry.expand_box(value)
         end
 
         def horizontal_padding
@@ -96,11 +100,7 @@ module Receipts
           row = Array(row)
           Array.new(columns) do |index|
             value = row[index]
-            if value.is_a?(Hash)
-              Cell.new(document, value[:content], cell_style.merge(value.reject { |key, _| key == :content }))
-            else
-              Cell.new(document, value, cell_style)
-            end
+            Cell.new(document, cell_style.merge(value.is_a?(Hash) ? value : {content: value}))
           end
         end
 
@@ -128,27 +128,17 @@ module Receipts
 
       def draw
         widths = column_widths
-        total = widths.sum
         bounds = @document.bounds
-        offset = case @position
-        when :center then (bounds.width - total) / 2.0
-        when :right then bounds.width - total
-        when Numeric then @position
-        else 0
-        end
-        x = bounds.absolute_left + offset
+        x = bounds.absolute_left + Geometry.align_offset(@position, bounds.width, widths.sum)
 
         header_count = (@header == true) ? 1 : @header.to_i
-        header_rows = @rows.first(header_count)
+        headers = @rows.first(header_count).map { |row| [row, *layout_row(row, widths)] }
 
         @rows.each_with_index do |row, index|
           lines, height = layout_row(row, widths)
 
-          if @document.y - height < bounds.absolute_bottom && @document.y < bounds.absolute_top
-            @document.start_new_page
-            if index >= header_rows.size
-              header_rows.each { |header| draw_row(header, *layout_row(header, widths), widths, x) }
-            end
+          if @document.start_new_page_if_needed(height) && index >= header_count
+            headers.each { |header, header_lines, header_height| draw_row(header, header_lines, header_height, widths, x) }
           end
 
           draw_row(row, lines, height, widths, x)
@@ -183,13 +173,9 @@ module Receipts
           @document.draw_text_lines(lines[index], x + cell.padding[3], top - cell.padding[0],
             width - cell.horizontal_padding, align: cell.align, leading: cell.leading)
 
-          Array(cell.borders).each do |border|
-            case border
-            when :top then @document.stroke_line(x, top, x + width, top, color: cell.border_color, width: cell.border_width)
-            when :bottom then @document.stroke_line(x, bottom, x + width, bottom, color: cell.border_color, width: cell.border_width)
-            when :left then @document.stroke_line(x, top, x, bottom, color: cell.border_color, width: cell.border_width)
-            when :right then @document.stroke_line(x + width, top, x + width, bottom, color: cell.border_color, width: cell.border_width)
-            end
+          edges = {top: [x, top, x + width, top], bottom: [x, bottom, x + width, bottom], left: [x, top, x, bottom], right: [x + width, top, x + width, bottom]}
+          edges.values_at(*Array(cell.borders)).compact.each do |edge|
+            @document.stroke_line(*edge, color: cell.border_color, width: cell.border_width)
           end
 
           x += width

@@ -39,11 +39,7 @@ module Receipts
     end
 
     def load_image(logo)
-      if logo.is_a? String
-        logo.start_with?("http") ? URI.parse(logo).open : File.open(logo)
-      else
-        logo
-      end
+      (logo.is_a?(String) && logo.start_with?("http")) ? URI.parse(logo).open : logo
     end
 
     def header(company: {}, height: 16)
@@ -76,7 +72,7 @@ module Receipts
           {content: Array(recipient).join("\n"), padding: [0, 12, 0, 0]}
         ]
       ]
-      table(line_items, width: bounds.width, cell_style: {borders: [], inline_format: true, overflow: :expand})
+      table(line_items, width: bounds.width, cell_style: {borders: [], inline_format: true})
     end
 
     def render_line_items(line_items:, margin_top: 30, column_widths: nil)

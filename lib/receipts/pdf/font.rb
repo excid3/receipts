@@ -16,7 +16,7 @@ module Receipts
 
       def width_of(text, size, character_spacing: 0)
         units = text.each_char.sum { |char| @widths[char] ||= @ttf.advance(@ttf.glyph_id(char.ord)) }
-        units * size / @ttf.units_per_em.to_f + character_spacing * text.length
+        scale(units, size) + character_spacing * text.length
       end
 
       def ascender(size)

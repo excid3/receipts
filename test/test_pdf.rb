@@ -146,6 +146,16 @@ class TestPDF < Minitest::Test
     assert_equal [128, 255].pack("C*"), Zlib::Inflate.inflate(mask.data)
   end
 
+  def test_repeated_images_are_embedded_once
+    doc = Receipts::PDF::Document.new
+    2.times { doc.image LOGO, height: 16 }
+    pdf = doc.render
+
+    assert_equal 2, pdf.scan("/Subtype /Image").size # the image and its transparency mask
+    assert_equal 2, inflated_streams(pdf).join.scan("/I1 Do").size
+    assert_same Receipts::PDF::Image.load(LOGO), Receipts::PDF::Image.load(File.open(LOGO, "rb"))
+  end
+
   def test_jpeg_dimensions
     jpeg = "\xFF\xD8\xFF\xE0\x00\x04\x00\x00\xFF\xC0\x00\x11\x08\x00\x20\x00\x40\x03".b + "\0" * 20
     image = Receipts::PDF::Image.load(StringIO.new(jpeg))

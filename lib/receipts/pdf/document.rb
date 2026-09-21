@@ -62,7 +62,7 @@ module Receipts
         @page_width = width
         @page_height = height
 
-        top, right, bottom, left = expand_box(margin)
+        top, right, bottom, left = Geometry.expand_box(margin)
         @bounds = Bounds.new(left, bottom, width - left - right, height - top - bottom)
 
         @info = info
@@ -73,7 +73,8 @@ module Receipts
         @stroke_color = "000000"
         @line_width = 1
         @fonts = {}
-        @images = []
+        @font_resources = {}.compare_by_identity
+        @images = {}.compare_by_identity
         @pages = []
 
         start_new_page
@@ -82,6 +83,14 @@ module Receipts
       def start_new_page
         @pages << Page.new(String.new(encoding: Encoding::BINARY), [])
         @y = @bounds.absolute_top
+      end
+
+      # Starts a new page if there isn't room for height, unless already at the top of one.
+      # Returns true when a new page was started.
+      def start_new_page_if_needed(height)
+        return false unless @y - height < @bounds.absolute_bottom && @y < @bounds.absolute_top
+        start_new_page
+        true
       end
 
       def page_count
@@ -144,10 +153,9 @@ module Receipts
         leading = options.fetch(:leading, 0)
 
         lines.each_with_index do |line, index|
-          height = line.ascender + line.descender
-          start_new_page if @y - height < @bounds.absolute_bottom && @y < @bounds.absolute_top
+          start_new_page_if_needed(line.height)
           draw_text_line(line, @bounds.absolute_left, @y - line.ascender, @bounds.width, options.fetch(:align, :left))
-          @y -= height
+          @y -= line.height
           @y -= line.line_gap + leading if index < lines.size - 1
         end
         nil
@@ -159,35 +167,14 @@ module Receipts
       # Position is :left, :center, :right or an x offset from the left bound.
       def image(source, width: nil, height: nil, position: :left)
         image = Image.load(source)
+        width ||= height ? image.width * height.to_f / image.height : [image.width, @bounds.width].min.to_f
+        height ||= image.height * width.to_f / image.width
+        x = @bounds.absolute_left + Geometry.align_offset(position, @bounds.width, width)
 
-        if width && height
-          nil
-        elsif width
-          height = image.height * width.to_f / image.width
-        elsif height
-          width = image.width * height.to_f / image.height
-        else
-          width = image.width.to_f
-          height = image.height.to_f
-          if width > @bounds.width
-            height *= @bounds.width / width
-            width = @bounds.width
-          end
-        end
+        start_new_page_if_needed(height)
 
-        offset = case position
-        when :left then 0
-        when :center then (@bounds.width - width) / 2.0
-        when :right then @bounds.width - width
-        when Numeric then position
-        else raise ArgumentError, "unknown image position #{position.inspect}"
-        end
-        x = @bounds.absolute_left + offset
-
-        start_new_page if @y - height < @bounds.absolute_bottom && @y < @bounds.absolute_top
-
-        @images << image
-        add_content "q #{n(width)} 0 0 #{n(height)} #{n(x)} #{n(@y - height)} cm /I#{@images.size} Do Q"
+        name = @images[image] ||= :"I#{@images.size + 1}"
+        add_content "q #{n(width)} 0 0 #{n(height)} #{n(x)} #{n(@y - height)} cm /#{name} Do Q"
         @y -= height
         nil
       end
@@ -212,8 +199,8 @@ module Receipts
       def render
         writer = Writer.new
 
-        fonts = @fonts.values.each_with_index.map { |font, i| [:"F#{i + 1}", font.build(writer)] }.to_h
-        images = @images.each_with_index.map { |image, i| [:"I#{i + 1}", image.build(writer)] }.to_h
+        fonts = @font_resources.map { |font, name| [name, font.build(writer)] }.to_h
+        images = @images.map { |image, name| [name, image.build(writer)] }.to_h
         resources = {}
         resources[:Font] = fonts if fonts.any?
         resources[:XObject] = images if images.any?
@@ -258,21 +245,10 @@ module Receipts
         y = top
         lines.each_with_index do |line, index|
           draw_text_line(line, x, y - line.ascender, width, align)
-          y -= line.ascender + line.descender
+          y -= line.height
           y -= line.line_gap + leading if index < lines.size - 1
         end
         top - y
-      end
-
-      # [top, right, bottom, left] from a number, [vertical, horizontal], [top, horizontal, bottom] or [top, right, bottom, left]
-      def expand_box(value)
-        values = Array(value)
-        case values.size
-        when 1 then values * 4
-        when 2 then [values[0], values[1], values[0], values[1]]
-        when 3 then [values[0], values[1], values[2], values[1]]
-        else values.first(4)
-        end
       end
 
       private
@@ -335,38 +311,23 @@ module Receipts
       # Picks the font for a style, faking bold or italic when the family doesn't include it.
       # Returns [font, fake_bold, oblique]
       def resolve_font(name, styles)
-        family = @font_families[name] || (name.to_s.end_with?(".ttf") && File.exist?(name.to_s) && {normal: name})
-        raise ArgumentError, "unknown font #{name.inspect}, register it with font_families.update(#{name.to_s.inspect} => {normal: \"path/to/font.ttf\"})" unless family
+        name = name.to_s
+        family = @font_families[name] || (name.end_with?(".ttf") && File.exist?(name) && {normal: name})
+        raise ArgumentError, "unknown font #{name.inspect}, register it with font_families.update(#{name.inspect} => {normal: \"path/to/font.ttf\"})" unless family
 
+        family = family.transform_keys(&:to_sym)
         bold = styles.include?(:bold)
         italic = styles.include?(:italic)
-        candidates = if bold && italic
-          [[:bold_italic, false, false], [:bold, false, true], [:italic, true, false], [:normal, true, true]]
-        elsif bold
-          [[:bold, false, false], [:normal, true, false]]
-        elsif italic
-          [[:italic, false, false], [:normal, false, true]]
-        else
-          [[:normal, false, false]]
-        end
-
-        key, fake_bold, oblique = candidates.find { |style, _, _| family[style] || family[style.to_s] }
+        key = [(:bold_italic if bold && italic), (:bold if bold), (:italic if italic), :normal].compact.find { |style| family[style] }
         raise ArgumentError, "font family #{name.inspect} needs a :normal font" unless key
 
-        path = File.expand_path((family[key] || family[key.to_s]).to_s)
-        [@fonts[path] ||= Font.new(path), fake_bold, oblique]
-      end
-
-      def font_resource(font)
-        :"F#{@fonts.values.index(font) + 1}"
+        path = File.expand_path(family[key].to_s)
+        font = @fonts[path] ||= Font.new(path).tap { |f| @font_resources[f] = :"F#{@font_resources.size + 1}" }
+        [font, bold && !key.to_s.include?("bold"), italic && !key.to_s.include?("italic")]
       end
 
       def draw_text_line(line, x, baseline, width, align)
-        x += case align
-        when :center then (width - line.width) / 2.0
-        when :right then width - line.width
-        else 0
-        end
+        x += Geometry.align_offset(align, width, line.width)
 
         line.runs.each do |run|
           draw_run(run, x, baseline)
@@ -378,22 +339,16 @@ module Receipts
         style = run.style
         y = baseline + style.rise
 
-        ops = ["q BT", "/#{font_resource(style.font)} #{n(style.size)} Tf", color_operator(style.color)]
+        ops = ["q BT", "/#{@font_resources.fetch(style.font)} #{n(style.size)} Tf", color_operator(style.color)]
         ops << "#{n(style.character_spacing)} Tc" unless style.character_spacing.zero?
         ops << "2 Tr #{n(style.size * 0.03)} w #{color_operator(style.color, stroke: true)}" if style.fake_bold
         ops << "1 0 #{style.oblique ? n(Font::OBLIQUE_SKEW) : 0} 1 #{n(x)} #{n(y)} Tm"
         ops << "<#{style.font.encode(run.text).unpack1("H*")}> Tj ET Q"
         add_content ops.join(" ")
 
-        if style.underline
-          position = y + style.font.underline_position(style.size)
-          stroke_line(x, position, x + run.width, position, color: style.color, width: style.font.underline_thickness(style.size))
-        end
-
-        if style.strikethrough
-          position = y + style.font.strikeout_position(style.size)
-          stroke_line(x, position, x + run.width, position, color: style.color, width: style.font.strikeout_size(style.size))
-        end
+        font = style.font
+        stroke_decoration(run, x, y, font.underline_position(style.size), font.underline_thickness(style.size)) if style.underline
+        stroke_decoration(run, x, y, font.strikeout_position(style.size), font.strikeout_size(style.size)) if style.strikethrough
 
         if style.link
           @pages.last.annotations << {
@@ -404,6 +359,12 @@ module Receipts
             A: {Type: :Action, S: :URI, URI: style.link.to_s}
           }
         end
+      end
+
+      # Draws an underline or strikethrough line across a run at an offset from its baseline
+      def stroke_decoration(run, x, baseline, offset, thickness)
+        y = baseline + offset
+        stroke_line(x, y, x + run.width, y, color: run.style.color, width: thickness)
       end
 
       # Hex RGB ("ff0000" or "#ff0000") or CMYK percentages ([0, 100, 100, 0])
