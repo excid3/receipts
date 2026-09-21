@@ -1,5 +1,5 @@
 module Receipts
-  class Base < Prawn::Document
+  class Base < PDF::Document
     attr_accessor :title, :company
 
     class << self

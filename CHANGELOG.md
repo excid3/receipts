@@ -1,5 +1,12 @@
 ### Unreleased
 
+### 3.0.0
+
+* Replace Prawn with a built-in, pure Ruby PDF generator. Receipts no longer has any gem dependencies.
+* Embed the Noto Sans font by default, adding Unicode support (Latin, Greek, Cyrillic) without configuring a custom font
+* Custom fonts must be TrueType (`.ttf`) files; only used characters are embedded
+* **Breaking:** Receipts objects inherit from `Receipts::PDF::Document` instead of `Prawn::Document`. Custom content using Prawn APIs beyond `text`, `image`, `table`, `move_down`/`move_up`, `font`, `font_size`, `bounds` and `start_new_page` needs updating.
+
 ### 2.4.0
 
 * Add `display: []` for configuring company details that are rendered

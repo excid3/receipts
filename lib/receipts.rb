@@ -1,7 +1,13 @@
 require "receipts/version"
 require "open-uri"
-require "prawn"
-require "prawn/table"
+require "receipts/pdf/writer"
+require "receipts/pdf/true_type"
+require "receipts/pdf/font"
+require "receipts/pdf/image"
+require "receipts/pdf/inline_format"
+require "receipts/pdf/text_layout"
+require "receipts/pdf/table"
+require "receipts/pdf/document"
 
 module Receipts
   autoload :Base, "receipts/base"
