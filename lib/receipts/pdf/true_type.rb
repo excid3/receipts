@@ -14,16 +14,28 @@ module Receipts
 
       CACHE = {}
       CACHE_MUTEX = Mutex.new
+      CACHE_SIZE = 16
 
       attr_reader :units_per_em, :bbox, :ascender, :descender, :line_gap, :num_glyphs, :cmap,
         :italic_angle, :underline_position, :underline_thickness, :strikeout_position, :strikeout_size,
         :cap_height, :x_height, :weight, :postscript_name
 
-      # Parsed fonts are cached since fonts are reused across documents
+      # Recently used fonts are cached by path since they're reused across documents,
+      # and parsed again if the file changes
       def self.load(path)
         path = File.expand_path(path.to_s)
-        key = [path, File.mtime(path)]
-        CACHE_MUTEX.synchronize { CACHE[key] ||= new(File.binread(path)) }
+        mtime = File.mtime(path)
+
+        CACHE_MUTEX.synchronize do
+          cached_mtime, font = CACHE[path]
+          unless cached_mtime == mtime
+            font = new(File.binread(path))
+            CACHE.delete(path)
+            CACHE[path] = [mtime, font]
+            CACHE.shift while CACHE.size > CACHE_SIZE
+          end
+          font
+        end
       end
 
       def initialize(data)

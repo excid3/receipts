@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "fileutils"
+require "tmpdir"
 
 class TestPDF < Minitest::Test
   FONT = Receipts::PDF::Document::DEFAULT_FONT[:normal]
@@ -53,6 +55,17 @@ class TestPDF < Minitest::Test
     gids.each { |gid| assert_equal ttf.advance(gid), advances[mapping.fetch(gid)] }
     assert_equal 0xB1B0AFBA, data.unpack("N*").sum & 0xFFFFFFFF
     assert_operator data.bytesize, :<, File.size(FONT) / 4
+  end
+
+  def test_font_cache_reloads_changed_fonts
+    path = File.join(Dir.mktmpdir, "font.ttf")
+    FileUtils.cp(FONT, path)
+    font = Receipts::PDF::TrueType.load(path)
+    assert_same font, Receipts::PDF::TrueType.load(path)
+
+    File.utime(Time.now, Time.now + 60, path)
+    refute_same font, Receipts::PDF::TrueType.load(path)
+    assert_equal 1, Receipts::PDF::TrueType::CACHE.keys.count(path)
   end
 
   def test_rejects_cff_fonts

@@ -162,7 +162,7 @@ module Receipts
       end
 
       # Draws an image at the cursor. Given only a width or height, the other is
-      # scaled proportionally. Images wider than the bounds are scaled down to fit.
+      # scaled proportionally. Given neither, images wider than the bounds are scaled down to fit.
       #
       # Position is :left, :center, :right or an x offset from the left bound.
       def image(source, width: nil, height: nil, position: :left)
