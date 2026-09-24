@@ -4,7 +4,7 @@
 
 Receipts, Invoices, and Statements for your Rails application that works with any payment provider. PDFs are generated in pure Ruby with no dependencies.
 
-Check out the [example PDFs](https://github.com/excid3/receipts/blob/master/examples/).
+Check out the [example PDFs](https://github.com/excid3/receipts/blob/main/examples/).
 
 ## Installation
 
