@@ -280,6 +280,14 @@ resources :charges
 <%= link_to "View Receipt", charge_path(@charge, format: :pdf) %>
 ```
 
+## Attaching PDFs in Rails mailers
+
+Pass `render` to `attachments` in your mailer:
+
+```ruby
+attachments["receipt.pdf"] = @charge.receipt.render
+```
+
 ## Invoices
 
 Invoices follow the exact same set of steps as above. You'll simply want to modify the `details` to include other information for the Invoice such as the Issue Date, Due Date, etc.
