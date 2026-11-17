@@ -9,7 +9,7 @@ module Receipts
     # Each fragment is a Hash with :text and any of :styles, :color, :link,
     # :font, :size and :character_spacing.
     module InlineFormat
-      TAG = %r{<(/?)(b|strong|i|em|u|strikethrough|sub|sup|font|color|link|a|br)(\s[^>]*?)?\s*/?>}i
+      TAG = %r{<(/?)(b|strong|i|em|u|strikethrough|sub|sup|font|color|link|a|br)(\s[^>]*)?/?>}i
       ATTRIBUTE = /(\w+)\s*=\s*(?:"([^"]*)"|'([^']*)')/
       ENTITIES = {"&lt;" => "<", "&gt;" => ">", "&amp;" => "&"}.freeze
       STYLES = {
