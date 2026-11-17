@@ -96,6 +96,19 @@ class TestPDF < Minitest::Test
     assert_nil fragments[7][:styles]
   end
 
+  def test_inline_format_tags_with_trailing_whitespace_and_slashes
+    fragments = Receipts::PDF::InlineFormat.parse("a<br />b<b >c</b ><a href=\"https://x.io\" />d")
+
+    assert_equal ["a", "\n", "b", "c", "d"], fragments.map { |f| f[:text] }
+    assert_equal [:bold], fragments[3][:styles]
+    assert_equal "https://x.io", fragments[4][:link]
+  end
+
+  def test_inline_format_unterminated_tag
+    string = "<b" + " " * 50_000
+    assert_equal [{text: string}], Receipts::PDF::InlineFormat.parse(string)
+  end
+
   def test_text_wraps_at_spaces
     doc = Receipts::PDF::Document.new
     lines = doc.text_lines("one two three four", {size: 10}, doc.width_of("three four", size: 10) + 1)

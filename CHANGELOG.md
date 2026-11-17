@@ -1,5 +1,7 @@
 ### Unreleased
 
+* Fix quadratic backtracking in the inline format tag regex on Ruby < 3.2 #46 - @p-w
+
 ### 3.0.0
 
 * Replace Prawn with a built-in, pure Ruby PDF generator. Receipts no longer has any gem dependencies.
