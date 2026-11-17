@@ -1,5 +1,7 @@
 ### Unreleased
 
+### 3.0.1
+
 * Fix quadratic backtracking in the inline format tag regex on Ruby < 3.2 #46 - @p-w
 
 ### 3.0.0
